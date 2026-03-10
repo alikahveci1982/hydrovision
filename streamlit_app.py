@@ -7,12 +7,10 @@ import io
 st.set_page_config(page_title="HydroVision AI Pro", page_icon="🤖")
 
 st.title("🤖 HYDROVISION AI PRO")
-st.write("Mühendislik Terminali · ISO 1219 · Llama 3.2 Vision")
+st.write("Mühendislik Terminali · ISO 1219 · Llama Vision")
 
-# API Anahtarı Girişi
 api_key = st.text_input("Groq API Anahtarını Girin", type="password")
 
-# Görsel Kaynağı
 source = st.radio("Görsel Kaynağı Seçin:", ("Dosya Yükle", "Kamera Kullan"))
 if source == "Dosya Yükle":
     uploaded_file = st.file_uploader("Şema veya Parça Görseli seç...", type=['jpg', 'png', 'jpeg'])
@@ -25,26 +23,24 @@ if uploaded_file is not None and api_key:
     
     if st.button("ANALİZ ET"):
         client = Groq(api_key=api_key)
-        
-        # Görseli hazırlama (Base64 formatına çevirme)
         buffered = io.BytesIO()
         image.save(buffered, format="JPEG")
         base64_image = base64.b64encode(buffered.getvalue()).decode('utf-8')
 
         try:
-            # Buradaki temperature: 0.1 kısmını temperature=0.1 olarak düzelttik
+            # Model ismini güncelledik: llama-3.2-11b-vision-preview
             completion = client.chat.completions.create(
-                model="llama-3.2-90b-vision-preview",
+                model="llama-3.2-11b-vision-preview",
                 messages=[
                     {
                         "role": "user",
                         "content": [
-                            {"type": "text", "text": "Sen kıdemli bir hidrolik mühendisisin. Bu görseldeki ISO 1219 sembollerini veya hidrolik parçayı analiz et. 1- Elemanları tanımla. 2- Akış yollarını açıkla. 3- Marka/Model tahmini yap (Rexroth, Parker vb.). 4- Çalışma prensibini özetle."},
+                            {"type": "text", "text": "Sen uzman bir hidrolik mühendisisin. Bu görseldeki ISO 1219 sembollerini veya hidrolik parçayı detaylıca analiz et. Elemanları, akış yollarını ve teknik detayları Türkçe olarak açıkla."},
                             {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
                         ]
                     }
                 ],
-                temperature=0.1 # Hata buradaydı, düzeltildi
+                temperature=0.1
             )
             st.success("✅ ANALİZ TAMAMLANDI")
             st.markdown(completion.choices[0].message.content)
