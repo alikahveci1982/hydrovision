@@ -1,15 +1,14 @@
 import streamlit as st
-from groq import Groq
-import base64
+import google.generativeai as genai
 from PIL import Image
-import io
 
 st.set_page_config(page_title="HydroVision AI Pro", page_icon="🤖")
 
 st.title("🤖 HYDROVISION AI PRO")
-st.write("Mühendislik Terminali · ISO 1219 · Llama Vision")
+st.write("Mühendislik Terminali · ISO 1219 · Gemini 1.5 PRO")
 
-api_key = st.text_input("Groq API Anahtarını Girin", type="password")
+# API Anahtarı Girişi (Google AI Studio'dan aldığın anahtar)
+api_key = st.text_input("Gemini API Anahtarını Girin", type="password")
 
 source = st.radio("Görsel Kaynağı Seçin:", ("Dosya Yükle", "Kamera Kullan"))
 if source == "Dosya Yükle":
@@ -21,28 +20,26 @@ if uploaded_file is not None and api_key:
     image = Image.open(uploaded_file)
     st.image(image, caption='Analiz Edilecek Görsel', use_container_width=True)
     
-    if st.button("ANALİZ ET"):
-        client = Groq(api_key=api_key)
-        buffered = io.BytesIO()
-        image.save(buffered, format="JPEG")
-        base64_image = base64.b64encode(buffered.getvalue()).decode('utf-8')
-
+    if st.button("🔍 ANALİZ ET"):
         try:
-            # model="llama-3.2-11b-vision-preview"
-            completion = client.chat.completions.create(
-                model="llama-3.2-11b-vision-preview",
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [
-                            {"type": "text", "text": "Sen uzman bir hidrolik mühendisisin. Bu görseldeki ISO 1219 sembollerini veya hidrolik parçayı detaylıca analiz et. Elemanları, akış yollarını ve teknik detayları Türkçe olarak açıkla."},
-                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
-                        ]
-                    }
-                ],
-                temperature=0.1
-            )
+            # Gemini Yapılandırması
+            genai.configure(api_key=api_key)
+            model = genai.GenerativeModel('gemini-1.5-flash') # Hızlı ve stabil model
+            
+            # Mühendislik Odaklı Prompt
+            prompt = """
+            Sen uzman bir hidrolik mühendisisin. Bu görseli analiz et:
+            1. ISO 1219 sembollerini tek tek tanımla.
+            2. Eğer gerçek bir parçaysa marka/model tahmini yap.
+            3. Sistemin çalışma mantığını ve akış yollarını Türkçe açıkla.
+            4. Varsa arıza yapabilecek noktaları belirt.
+            """
+            
+            with st.spinner('Zeka işleniyor...'):
+                response = model.generate_content([prompt, image])
+                
             st.success("✅ ANALİZ TAMAMLANDI")
-            st.markdown(completion.choices[0].message.content)
+            st.markdown(response.text)
+            
         except Exception as e:
             st.error(f"Bir hata oluştu: {e}")
