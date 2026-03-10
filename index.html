@@ -1,54 +1,41 @@
-import streamlit as st
-from PIL import Image
-import google.generativeai as genai
-from groq import Groq
-import io
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>HydroVision AI Pro</title>
+    <style>
+        body { font-family: sans-serif; background: #1a1a1a; color: white; text-align: center; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: #2d2d2d; padding: 30px; border-radius: 15px; }
+        input, button { padding: 10px; margin: 10px; border-radius: 5px; border: none; }
+        button { background: #007bff; color: white; cursor: pointer; font-weight: bold; }
+        #result { text-align: left; background: #eee; color: #333; padding: 15px; border-radius: 5px; margin-top: 20px; min-height: 100px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 HYDROVISION AI PRO</h1>
+        <p>Mühendislik Terminali · ISO 1219</p>
+        <input type="password" id="apiKey" placeholder="Groq API Anahtarını Girin">
+        <br>
+        <input type="file" id="imageInput" accept="image/*">
+        <br>
+        <button onclick="analyze()">ANALİZ ET</button>
+        <div id="result">Analiz sonuçları burada görünecek...</div>
+    </div>
 
-# Sayfa Yapılandırması
-st.set_page_config(page_title="HydroVision AI Pro", layout="wide")
-st.title("🤖 HydroVision AI - Hidrolik Analiz Terminali")
-
-# API Anahtarları (Buraya kendi anahtarlarını girebilirsin)
-GEMINI_API_KEY = "AIzaSyCokaT4X5LprDqoadd8YuV8ha82GclR7R4"
-GROQ_API_KEY = ""
-
-# Sistem Komutu (Prompt) - Mühendislik Uzmanlığı Ekliyoruz
-SYSTEM_PROMPT = """
-const HYDRAULIC_EXPERT_PROMPT = `
-Sen dünya çapında bir hidrolik sistem uzmanı ve ISO 1219 standartları denetçisisin. 
-Görseli şu 4 aşamada analiz et:
-
-1. **Görsel Türü:** Bu bir teknik devre şeması mı, yoksa gerçek bir parça fotoğrafı mı?
-2. **Şema Analizi (Eğer Şemaysa):** - Sembolleri ISO 1219-1'e göre tanımla (Ör: 4/3 Kapalı Merkez Yön Kontrol Valfi).
-   - Hat bağlantılarını (P, T, A, B) ve yardımcı sinyal hatlarını belirt.
-3. **Parça Analizi (Eğer Gerçek Parçaysa):**
-   - Gövde yapısına bak (Döküm, Alüminyum, Çelik).
-   - Port sayısını ve montaj tipini (Cetop, Kartuş, Hat tipi) belirle.
-   - Marka ipuçlarını değerlendir (Bosch Rexroth, Parker, Danfoss vb.).
-4. **Teknik Özet:** Bu parçanın/şemanın sistemdeki kritik görevini 2 cümleyle açıkla.
-
-Eğer görsel net değilse, kullanıcıdan 'makro çekim' veya 'etiket fotoğrafı' iste.
-`;
-
-uploaded_file = st.file_uploader("Şema veya Parça Görseli Yükle", type=['jpg', 'png', 'jpeg'])
-
-if uploaded_file is not None:
-    image = Image.open(uploaded_file)
-    st.image(image, caption='Yüklenen Görsel', width=500)
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        if st.button("🔍 Şema Çözümle (Gemini)"):
-            with st.spinner('Şema analiz ediliyor...'):
-                genai.configure(api_key=GEMINI_API_KEY)
-                model = genai.GenerativeModel('gemini-1.5-pro')
-                response = model.generate_content([SYSTEM_PROMPT, image])
-                st.markdown(f"### Şema Analiz Raporu\n{response.text}")
-
-    with col2:
-        if st.button("📸 Parça Tanı (Groq/Llama)"):
-            # Not: Groq Llama Vision API entegrasyonu için base64 dönüşümü gerekir
-            st.info("Groq üzerinden Llama 3 Vision analizi başlatıldı...")
-            # Burada Groq SDK çağrısı yapılacak (Örnek mantık)
-            st.success("Analiz Tamamlandı: Bu bir 4/3 Yön Kontrol Valfidir (Rexroth Tip).")
+    <script>
+        async function analyze() {
+            const key = document.getElementById('apiKey').value;
+            const file = document.getElementById('imageInput').files[0];
+            const resultDiv = document.getElementById('result');
+            
+            if(!key || !file) { alert("Lütfen anahtar girin ve bir resim seçin!"); return; }
+            
+            resultDiv.innerText = "Analiz ediliyor... Lütfen bekleyin.";
+            
+            // Burada Groq API çağrısı ve görsel işleme mantığı yer alacak
+            // Şimdilik arayüzü düzeltmek için bu temel yapıyı kurduk.
+        }
+    </script>
+</body>
+</html>
