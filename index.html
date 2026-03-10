@@ -14,12 +14,21 @@ GROQ_API_KEY = ""
 
 # Sistem Komutu (Prompt) - Mühendislik Uzmanlığı Ekliyoruz
 SYSTEM_PROMPT = """
-S"Sen bir ISO 1219 uzmanısın. Analiz yaparken şu adımları izle:
-1. Görseldeki sembollerin yönlerini (P, T, A, B portları) belirle.
-2. Gerçek parçaysa, üzerindeki valf tipini (sürgülü, oturmalı, çek valf) döküm gövdeden ayırt et.
-3. Marka tahmini yap (Rexroth turuncusu, Parker grisi, Eaton siyahı gibi renk ipuçlarını kullan).
-4. Emin değilsen 'Belirsiz' de ve parçanın diğer açılardan fotoğrafını iste."
-"""
+const HYDRAULIC_EXPERT_PROMPT = `
+Sen dünya çapında bir hidrolik sistem uzmanı ve ISO 1219 standartları denetçisisin. 
+Görseli şu 4 aşamada analiz et:
+
+1. **Görsel Türü:** Bu bir teknik devre şeması mı, yoksa gerçek bir parça fotoğrafı mı?
+2. **Şema Analizi (Eğer Şemaysa):** - Sembolleri ISO 1219-1'e göre tanımla (Ör: 4/3 Kapalı Merkez Yön Kontrol Valfi).
+   - Hat bağlantılarını (P, T, A, B) ve yardımcı sinyal hatlarını belirt.
+3. **Parça Analizi (Eğer Gerçek Parçaysa):**
+   - Gövde yapısına bak (Döküm, Alüminyum, Çelik).
+   - Port sayısını ve montaj tipini (Cetop, Kartuş, Hat tipi) belirle.
+   - Marka ipuçlarını değerlendir (Bosch Rexroth, Parker, Danfoss vb.).
+4. **Teknik Özet:** Bu parçanın/şemanın sistemdeki kritik görevini 2 cümleyle açıkla.
+
+Eğer görsel net değilse, kullanıcıdan 'makro çekim' veya 'etiket fotoğrafı' iste.
+`;
 
 uploaded_file = st.file_uploader("Şema veya Parça Görseli Yükle", type=['jpg', 'png', 'jpeg'])
 
