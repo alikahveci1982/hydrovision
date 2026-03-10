@@ -24,7 +24,7 @@
     </div>
 
     <script>
-        async function analyze() {
+       async function analyze() {
     const key = document.getElementById('apiKey').value;
     const fileInput = document.getElementById('imageInput');
     const resultDiv = document.getElementById('result');
@@ -35,9 +35,8 @@
     }
     
     const file = fileInput.files[0];
-    resultDiv.innerText = "⚡ Hidrolik Sistem Analiz Ediliyor... Lütfen bekleyin.";
+    resultDiv.innerText = "⚡ Analiz başlatıldı... Yanıt bekleniyor.";
 
-    // Görseli Base64'e çeviriyoruz
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = async () => {
@@ -51,17 +50,33 @@
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    model: "llama-3.2-11b-vision-preview",
+                    model: "llama-3.2-90b-vision-preview", // Daha güçlü model
                     messages: [{
                         role: "user",
                         content: [
-                            { type: "text", text: "Sen bir hidrolik mühendisisin. Bu görseldeki ISO 1219 sembollerini veya gerçek hidrolik parçayı detaylıca analiz et, marka ve model tahmini yap." },
+                            { type: "text", text: "Bu hidrolik şemayı veya parçayı ISO 1219 standartlarına göre analiz et." },
                             { type: "image_url", image_url: { url: `data:image/jpeg;base64,${base64Image}` } }
                         ]
-                    }],
-                    temperature: 0.1
+                    }]
                 })
             });
+
+            const data = await response.json();
+            
+            // Hata ayıklama: Eğer API hata dönerse ekrana yazdır
+            if (data.error) {
+                resultDiv.innerHTML = `<span style="color:red">API Hatası: ${data.error.message}</span>`;
+                return;
+            }
+
+            resultDiv.innerHTML = "<h3>✅ ANALİZ:</h3>" + data.choices[0].message.content;
+            
+        } catch (error) {
+            resultDiv.innerHTML = `<span style="color:red">Bağlantı Hatası: ${error.message} <br> (Muhtemelen CORS engeli)</span>`;
+        }
+    };
+}
+       
 
             const data = await response.json();
             if (data.choices && data.choices[0]) {
