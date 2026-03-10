@@ -28,7 +28,7 @@ if uploaded_file is not None and api_key:
         base64_image = base64.b64encode(buffered.getvalue()).decode('utf-8')
 
         try:
-            # Model ismini güncelledik: llama-3.2-11b-vision-preview
+            # model="llama-3.2-11b-vision-preview"
             completion = client.chat.completions.create(
                 model="llama-3.2-11b-vision-preview",
                 messages=[
