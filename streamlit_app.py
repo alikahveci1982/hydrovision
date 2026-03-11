@@ -1,77 +1,65 @@
-
 import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 import urllib.parse
 
-# Profesyonel Mobil & Masaüstü Arayüz
-st.set_page_config(page_title="HydroVision Pro", page_icon="⚙️", layout="centered")
-
-st.markdown("""
-    <style>
-    .main { background-color: #0e1117; color: #ffffff; }
-    div.stButton > button:first-child {
-        background-color: #ff4b4b; color: white; border-radius: 12px;
-        height: 60px; width: 100%; font-size: 20px; font-weight: bold;
-    }
-    .result-card { background-color: #161b22; padding: 20px; border-radius: 15px; border: 1px solid #30363d; margin-top: 20px; }
-    .buy-btn { display: block; padding: 15px; margin: 10px 0; border-radius: 10px; text-decoration: none; font-weight: bold; text-align: center; color: white !important; }
-    </style>
-    """, unsafe_allow_html=True)
+# UI Ayarları
+st.set_page_config(page_title="HydroVision Pro", page_icon="⚙️")
+st.markdown("""<style>.main { background-color: #0e1117; color: white; } div.stButton > button { width: 100%; height: 3em; background-color: #ff4b4b; color: white; font-weight: bold; border-radius: 10px; }</style>""", unsafe_allow_html=True)
 
 st.title("🤖 HYDROVISION PRO")
-st.caption("🔧 Arıza Tespit & Akıllı Satın Alma Terminali")
+st.caption("🔧 Arıza Tespit & Akıllı Satın Alma")
 
 api_key = st.text_input("🔑 Gemini API Anahtarı", type="password")
 
-# --- BURAYI DÜZELTTİK: DOSYA SEÇME BUTONU GERİ GELDİ ---
-tab1, tab2 = st.tabs(["📸 Fotoğraf Çek", "📂 Dosya Yükle"])
+# Resim seçme sekmeleri
+t1, t2 = st.tabs(["📸 Fotoğraf Çek", "📂 Dosya Yükle"])
+with t1: cam = st.camera_input("Kamerayı Aç")
+with t2: file = st.file_uploader("Dosya Seç", type=['jpg', 'png', 'jpeg'])
 
-with tab1:
-    cam_file = st.camera_input("Kamerayı Kullan")
-with tab2:
-    uploaded_file = st.file_uploader("Galeriden veya Bilgisayardan Seç", type=['jpg', 'png', 'jpeg'])
+final_img = cam if cam else file
 
-# Hangi kaynaktan resim gelirse onu kullan
-final_file = cam_file if cam_file is not None else uploaded_file
-
-if final_file and api_key:
-    image = Image.open(final_file)
-    st.image(image, caption='Analiz Hazır', use_container_width=True)
+if final_img and api_key:
+    img = Image.open(final_img)
+    st.image(img, use_container_width=True)
     
     if st.button("🔍 ANALİZ ET VE PARÇA BUL"):
         try:
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            
+            # --- HATAYI BİTİREN OTOMATİK MODEL SEÇİMİ ---
+            # Mevcut tüm modelleri listele ve 'generateContent' destekleyen Gemini modellerini bul
+            model_list = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+            
+            # Tercih sırasına göre seçim yap
+            if 'models/gemini-1.5-flash' in model_list:
+                selected_model = 'models/gemini-1.5-flash'
+            elif 'models/gemini-1.5-pro' in model_list:
+                selected_model = 'models/gemini-1.5-pro'
+            else:
+                # Eğer yukarıdakiler yoksa, listedeki ilk uygun modeli al
+                selected_model = model_list[0]
+            
+            model = genai.GenerativeModel(selected_model)
             
             prompt = """
-            Sen bir hidrolik mühendisisin. Yanıtı ŞU FORMATTA ver:
-            PARÇA_ADI: [Sadece parçanın ismi, örn: Hidrolik Silindir]
+            Sen uzman bir hidrolik mühendisisin. Yanıtı şu formatta ver:
+            PARÇA_ADI: [Yalın parça ismi]
             ---
-            1. ARIZA ANALİZİ: [Neden bozulmuş olabilir?]
-            2. ÇÖZÜM: [Nasıl tamir edilir?]
-            3. TEKNİK KOD: [Piyasa kodu]
+            1. ARIZA ANALİZİ: [Olası nedenler]
+            2. ÇÖZÜM: [Öneri]
             """
             
-            with st.spinner('⚙️ Mühendislik zekası devrede...'):
-                response = model.generate_content([prompt, image])
-                full_text = response.text
+            with st.spinner(f'⚙️ {selected_model} çalışıyor...'):
+                resp = model.generate_content([prompt, img])
                 
-                # Parça ismini ayıran yazılım mantığı
-                parts = full_text.split("---")
-                item_name = parts[0].replace("PARÇA_ADI:", "").strip()
-                analysis = parts[1] if len(parts) > 1 else full_text
-
-            st.success(f"✅ Tespit Edilen: {item_name}")
-            st.markdown(f'<div class="result-card">{analysis}</div>', unsafe_allow_html=True)
+            st.success("✅ ANALİZ TAMAMLANDI")
+            st.write(resp.text)
             
-            # --- HATASIZ SATIN ALMA LİNKLERİ ---
-            clean_query = urllib.parse.quote(item_name)
-            st.subheader("🛒 Akıllı Satın Alma")
-            st.markdown(f"""
-                <a href="https://www.google.com/search?q={clean_query}+fiyatları+satın+al" class="buy-btn" style="background-color: #4285F4;">🛒 {item_name} Fiyatlarını Gör</a>
-                <a href="https://www.google.com/search?tbm=shop&q={clean_query}" class="buy-btn" style="background-color: #F4B400;">🛍️ Google Alışveriş Sonuçları</a>
-            """, unsafe_allow_html=True)
+            # Satın alma linki
+            p_name = resp.text.split("---")[0].replace("PARÇA_ADI:", "").strip()
+            q = urllib.parse.quote(f"Hidrolik {p_name}")
+            st.markdown(f'<a href="https://www.google.com/search?q={q}+fiyatları" target="_blank" style="text-decoration:none;"><button style="width:100%; height:3em; background-color:#4285F4; color:white; border:none; border-radius:10px;">🛒 {p_name} Satın Alma Seçenekleri</button></a>', unsafe_allow_html=True)
 
         except Exception as e:
-            st.error(f"Hata: {str(e)}")
+            st.error(f"❌ Hata: {str(e)}")
