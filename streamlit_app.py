@@ -33,29 +33,24 @@ if final_img and api_key:
             vision_models = [m for m in all_models if 'gemini' in m.lower() and 'embedding' not in m.lower()]
             
             # Öncelik sırası — en güncel ve stabil modeller önce
-            PREFERRED = [
-                'models/gemini-2.0-flash',
-                'models/gemini-2.0-flash-lite',
-                'models/gemini-1.5-flash-latest',
-                'models/gemini-1.5-flash',
-                'models/gemini-1.5-pro-latest',
-                'models/gemini-1.5-pro',
-                'models/gemini-pro-vision',
+            # Tüm uygun modelleri listele
+all_models = [m.name for m in genai.list_models() 
+              if 'generateContent' in m.supported_generation_methods
+              and 'gemini' in m.name.lower()
+              and 'embedding' not in m.name.lower()]
+
+st.info(f"Mevcut modeller: {all_models}")  # Hangileri var görmek için
+
+# İlk uygun modeli seç
+selected_model = all_models[0] if all_models else None
             ]
-            
-            selected_model = None
-            for pref in PREFERRED:
-                if pref in vision_models:
-                    selected_model = pref
-                    break
             
             # Hiçbiri yoksa listedeki ilk modeli dene
             if not selected_model:
                 selected_model = vision_models[0] if vision_models else None
 
             if not selected_model:
-                st.error("❌ Uygun Gemini modeli bulunamadı. API anahtarınızı kontrol edin.")
-                st.stop()
+                st.error("❌ Uygun Gemini modeli bulunamadı. API anahtarınızı kontrol 
 
             st.info(f"🤖 Kullanılan model: `{selected_model}`")
             model = genai.GenerativeModel(selected_model)
