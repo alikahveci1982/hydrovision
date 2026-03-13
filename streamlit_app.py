@@ -2,158 +2,192 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 import urllib.parse
+from functools import lru_cache
+from typing import List
+from pydantic import BaseModel, Field
 
 # ─── SAYFA AYARLARI ───────────────────────────────────────────────────────────
-st.set_page_config(page_title="HydroVision Pro", page_icon="⚙️", layout="centered")
+st.set_page_config(
+    page_title="HydroVision Pro",
+    page_icon="⚙️",
+    layout="centered",
+    initial_sidebar_state="auto"
+)
 
 st.markdown("""
 <style>
-.main { background-color: #0e1117; color: white; }
-div.stButton > button {
-    width: 100%;
-    height: 3em;
-    background-color: #ff4b4b;
-    color: white;
-    font-weight: bold;
-    border-radius: 10px;
-    font-size: 16px;
-}
+    .main { background-color: #0e1117; color: white; }
+    div.stButton > button {
+        width: 100%;
+        height: 3em;
+        background-color: #ff4b4b;
+        color: white;
+        font-weight: bold;
+        border-radius: 10px;
+        font-size: 16px;
+        margin: 10px 0;
+    }
+    .stSuccess { background-color: #1e3a2f; }
 </style>
 """, unsafe_allow_html=True)
 
 st.title("🤖 HYDROVISION PRO")
 st.caption("🔧 Arıza Tespit & Akıllı Satın Alma")
 
-# ─── API ANAHTARI ─────────────────────────────────────────────────────────────
-api_key = st.text_input("🔑 Gemini API Anahtarı", type="password",
-                        placeholder="AIza... şeklinde başlayan anahtarınızı girin")
+# ─── API ANAHTARI YÖNETİMİ (session_state ile kalıcı) ──────────────────────────
+if "api_key" not in st.session_state:
+    st.session_state.api_key = ""
 
-# ─── MODEL ÖNCELİK LİSTESİ ────────────────────────────────────────────────────
-# En yeniden eskiye sıralı — hesabınızda hangisi varsa otomatik seçilir
-PREFERRED_MODELS = [
-    "models/gemini-2.5-pro-preview-03-25",
-    "models/gemini-2.5-pro",
-    "models/gemini-2.0-flash-lite",
-    "models/gemini-1.5-pro-latest",
-    "models/gemini-1.5-flash-latest",
-    "models/gemini-1.5-pro",
-    "models/gemini-1.5-flash",
-]
+api_key = st.text_input(
+    "🔑 Gemini API Anahtarı",
+    type="password",
+    value=st.session_state.api_key,
+    placeholder="AIza... şeklinde başlayan anahtarınızı girin",
+    help="https://aistudio.google.com/app/apikey adresinden ücretsiz alabilirsiniz"
+)
 
-# ─── MODEL SEÇİCİ ─────────────────────────────────────────────────────────────
-def get_best_model(key: str) -> str:
-    """API'den mevcut modelleri alır, en uygununu döner."""
-    genai.configure(api_key=key)
-    try:
-        available = [
-            m.name for m in genai.list_models()
-            if "generateContent" in m.supported_generation_methods
-            and "gemini" in m.name.lower()
-            and "embedding" not in m.name.lower()
-        ]
-    except Exception as e:
-        raise Exception(f"Model listesi alınamadı: {e}")
-
-    if not available:
-        raise Exception("Hiç kullanılabilir model bulunamadı. API anahtarını kontrol edin.")
-
-    # Öncelik listesinden ilk eşleşeni al
-    for pref in PREFERRED_MODELS:
-        if pref in available:
-            return pref
-
-    # Listede yoksa mevcut ilk modeli kullan
-    return available[0]
-
-
-# ─── ANALİZ FONKSİYONU ────────────────────────────────────────────────────────
-def analyze_image(key: str, img: Image.Image) -> tuple[str, str]:
-    """Görseli analiz eder. (model_adı, sonuç_metni) döner."""
-    model_name = get_best_model(key)
-
-    prompt = """
-Sen uzman bir hidrolik mühendisisin. Görseli dikkatlice incele ve
-aşağıdaki formatta yanıt ver:
-
-PARÇA_ADI: [Kısa ve net parça ismi, örn: Yön Kontrol Valfi]
----
-1. ARIZA ANALİZİ:
-   - [Olası arıza nedeni 1]
-   - [Olası arıza nedeni 2]
-
-2. ÇÖZÜM ÖNERİSİ:
-   - [Yapılması gereken adım 1]
-   - [Yapılması gereken adım 2]
-
-3. BAKIM TAVSİYESİ:
-   - [Önleyici bakım önerisi]
-"""
-    model = genai.GenerativeModel(model_name)
-    response = model.generate_content([prompt, img])
-    return model_name, response.text
-
-
-# ─── GÖRSEL YÜKLEME ───────────────────────────────────────────────────────────
-t1, t2 = st.tabs(["📸 Fotoğraf Çek", "📂 Dosya Yükle"])
-with t1:
-    cam = st.camera_input("Kamerayı Aç")
-with t2:
-    file = st.file_uploader("Dosya Seç", type=["jpg", "png", "jpeg"])
-
-final_img = cam if cam else file
-
-# ─── ANA AKIŞ ─────────────────────────────────────────────────────────────────
-if not api_key:
+if api_key:
+    st.session_state.api_key = api_key
+    genai.configure(api_key=api_key)
+else:
     st.info("👆 Başlamak için Gemini API anahtarınızı girin.")
     st.stop()
 
-if not final_img:
-    st.info("📷 Analiz etmek istediğiniz görseli yükleyin veya çekin.")
+# ─── MODEL ÖNCELİK LİSTESİ (2026 Mart gerçekçi durum) ──────────────────────────
+PREFERRED_MODELS = [
+    "models/gemini-3.1-pro-preview",       # En güçlü (2026)
+    "models/gemini-2.5-pro",
+    "models/gemini-2.5-flash",
+    "models/gemini-2.5-flash-lite",
+    "models/gemini-3-flash",
+]
+
+@lru_cache(maxsize=1)
+def get_available_models() -> List[str]:
+    """Cache'lenmiş model listesi (saatte bir yenilenir)"""
+    try:
+        models = genai.list_models()
+        return [
+            m.name for m in models
+            if "generateContent" in m.supported_generation_methods
+            and "gemini" in m.name.lower()
+            and not any(x in m.name.lower() for x in ["embedding", "tts"])
+        ]
+    except Exception as e:
+        st.error(f"Model listesi alınamadı: {e}")
+        return []
+
+def get_best_model() -> str:
+    available = get_available_models()
+    if not available:
+        raise ValueError("Hiç kullanılabilir Gemini modeli bulunamadı. API anahtarını kontrol edin.")
+    for pref in PREFERRED_MODELS:
+        if pref in available:
+            return pref
+    return available[0]  # fallback
+
+# ─── STRUCTURED ÇIKTI MODELİ (Pydantic) ───────────────────────────────────────
+class AnalysisResult(BaseModel):
+    parça_adı: str = Field(description="Kısa ve net parça ismi, örn: Yön Kontrol Valfi")
+    arıza_analizi: List[str] = Field(description="Olası arıza nedenleri")
+    çözüm_önerisi: List[str] = Field(description="Yapılması gereken adımlar")
+    bakım_tavsiyesi: List[str] = Field(description="Önleyici bakım önerileri")
+
+# ─── ANALİZ FONKSİYONU ────────────────────────────────────────────────────────
+def analyze_image(img: Image.Image) -> tuple[str, AnalysisResult]:
+    model_name = get_best_model()
+    model = genai.GenerativeModel(model_name)
+
+    prompt = """
+Sen uzman bir hidrolik / hidrolik sistemler mühendisisin.
+Görseli çok dikkatli incele ve aşağıdaki JSON yapısına tam uyan cevap ver.
+Ekstra metin, açıklama veya JSON dışı hiçbir şey yazma.
+"""
+
+    try:
+        response = model.generate_content(
+            contents=[prompt, img],
+            generation_config=genai.types.GenerationConfig(
+                response_mime_type="application/json",
+                response_schema=AnalysisResult.model_json_schema(),
+                temperature=0.2,
+                top_p=0.95,
+            ),
+            safety_settings={
+                "HARM_CATEGORY_DANGEROUS_CONTENT": "BLOCK_NONE",
+                "HARM_CATEGORY_HARASSMENT": "BLOCK_NONE",
+            }
+        )
+        result = AnalysisResult.model_validate_json(response.text)
+        return model_name, result
+
+    except Exception as e:
+        raise RuntimeError(f"Analiz sırasında hata: {str(e)}")
+
+# ─── GÖRSEL YÜKLEME ───────────────────────────────────────────────────────────
+st.markdown("### 📸 Görsel Yükleme / Çekme")
+col1, col2 = st.columns(2)
+with col1:
+    camera_input = st.camera_input("📷 Kamerayı Aç")
+with col2:
+    uploaded_file = st.file_uploader("📂 Dosya Seç", type=["jpg", "jpeg", "png", "webp"])
+
+final_file = camera_input or uploaded_file
+
+if not final_file:
+    st.info("Lütfen analiz etmek istediğiniz hidrolik parça / sistem görselini yükleyin veya kamera ile çekin.")
     st.stop()
 
-# Görsel önizleme
-img_pil = Image.open(final_img)
-st.image(img_pil, caption="Yüklenen Görsel", use_container_width=True)
-st.success("✅ Analiz Hazır")
+# Görseli aç + resize (Gemini kota ve hız için)
+img = Image.open(final_file)
+if img.size[0] > 2000 or img.size[1] > 2000:
+    img.thumbnail((2000, 2000), Image.Resampling.LANCZOS)
 
-if st.button("🔍 ANALİZ ET VE PARÇA BUL"):
+st.image(img, caption="Yüklenen / Çekilen Görsel", use_container_width=True)
+
+# ─── ANALİZ BUTONU ────────────────────────────────────────────────────────────
+if st.button("🔍 ANALİZ ET VE PARÇA BUL", type="primary"):
     try:
-        with st.spinner("⚙️ Görsel analiz ediliyor, lütfen bekleyin..."):
-            model_name, result_text = analyze_image(api_key, img_pil)
+        with st.status("⚙️ Görsel analiz ediliyor...", expanded=True) as status:
+            status.write("Model seçiliyor...")
+            model_name = get_best_model()
+            status.write(f"Kullanılan model: **{model_name}**")
 
-        st.info(f"🤖 Kullanılan model: `{model_name}`")
-        st.success("✅ ANALİZ TAMAMLANDI")
-        st.write(result_text)
+            status.write("Gemini API'ye gönderiliyor...")
+            model_name, result = analyze_image(img)
 
-        # Parça adını çıkar ve arama linki oluştur
-        parts = result_text.split("---")
-        p_name = parts[0].replace("PARÇA_ADI:", "").strip()
-        if not p_name:
-            p_name = "hidrolik parça"
+            status.update(label="✅ Analiz Tamamlandı!", state="complete")
 
-        q = urllib.parse.quote(f"Hidrolik {p_name}")
+        # Sonuçları güzel göster
+        st.subheader(f"🔧 Parça: **{result.parça_adı}**")
+        st.markdown("**1. ARIZA ANALİZİ**")
+        for item in result.arıza_analizi:
+            st.markdown(f"• {item}")
+
+        st.markdown("**2. ÇÖZÜM ÖNERİSİ**")
+        for item in result.çözüm_önerisi:
+            st.markdown(f"• {item}")
+
+        st.markdown("**3. BAKIM TAVSİYESİ**")
+        for item in result.bakım_tavsiyesi:
+            st.markdown(f"• {item}")
+
+        # Satın alma linki
+        query = urllib.parse.quote(f"Hidrolik {result.parça_adı} fiyatları")
         st.markdown(
-            f'<a href="https://www.google.com/search?q={q}+fiyatları" target="_blank" style="text-decoration:none;">'
-            f'<button style="width:100%; height:3em; background-color:#4285F4; color:white; '
-            f'border:none; border-radius:10px; font-size:16px; cursor:pointer; margin-top:10px;">'
-            f'🛒 {p_name} Satın Alma Seçenekleri</button></a>',
+            f"""
+            <a href="https://www.google.com/search?q={query}" target="_blank" style="text-decoration:none;">
+                <button style="width:100%; background:#4285F4; color:white; border:none; border-radius:10px; padding:12px; font-size:16px; cursor:pointer;">
+                    🛒 {result.parça_adı} Satın Alma Seçenekleri (Google'da Ara)
+                </button>
+            </a>
+            """,
             unsafe_allow_html=True
         )
 
     except Exception as e:
-        err = str(e)
-        st.error(f"❌ Hata: {err}")
-
-        # Hata tipine göre yönlendirme
-        if "429" in err:
-            st.warning("⚠️ Kota doldu. Birkaç dakika bekleyip tekrar deneyin.")
-            st.info("💡 Kota artırmak için: https://console.cloud.google.com/billing")
-        elif "404" in err or "not found" in err.lower():
-            st.warning("⚠️ Bu model hesabınızda mevcut değil. Sistem başka model aradı ama bulamadı.")
-            st.info("💡 Yeni API anahtarı alın: https://aistudio.google.com/app/apikey")
-        elif "403" in err or "api_key" in err.lower():
-            st.warning("⚠️ API anahtarı geçersiz veya yetersiz izne sahip.")
-            st.info("💡 Anahtarı kontrol edin: https://aistudio.google.com/app/apikey")
-        elif "quota" in err.lower():
-            st.warning("⚠️ Günlük istek limitine ulaşıldı.")
-            st.info("💡 Billing ekleyerek limiti kaldırın: https://console.cloud.google.com/billing")
+        st.error(f"❌ Hata oluştu: {str(e)}")
+        if "429" in str(e):
+            st.warning("Kota limitine ulaşıldı. Birkaç dakika bekleyin veya billing etkinleştirin.")
+        elif "invalid" in str(e).lower() or "key" in str(e).lower():
+            st.warning("API anahtarı geçersiz görünüyor. Yeni anahtar deneyin.")
