@@ -93,34 +93,50 @@ class AnalysisResult(BaseModel):
     çözüm_önerisi: List[str] = Field(description="Yapılması gereken adımlar")
     bakım_tavsiyesi: List[str] = Field(description="Önleyici bakım önerileri")
 
-# ─── ANALİZ FONKSİYONU ────────────────────────────────────────────────────────
+# ─── ANALİZ FONKSİYONU (Yeni versiyon – schema olmadan) ────────────────────────
 def analyze_image(img: Image.Image) -> tuple[str, AnalysisResult]:
     model_name = get_best_model()
     model = genai.GenerativeModel(model_name)
 
     prompt = """
-Sen uzman bir hidrolik / hidrolik sistemler mühendisisin.
-Görseli çok dikkatli incele ve aşağıdaki JSON yapısına tam uyan cevap ver.
-Ekstra metin, açıklama veya JSON dışı hiçbir şey yazma.
+Sen uzman bir hidrolik sistemler mühendisisin. Görseli çok dikkatli incele.
+
+Aşağıdaki **tam JSON** formatında cevap ver. Ekstra metin, açıklama, markdown veya JSON dışı hiçbir şey yazma!
+
+{
+  "parça_adı": "Kısa ve net parça ismi, örn: Yön Kontrol Valfi",
+  "arıza_analizi": ["Olası neden 1", "Olası neden 2", ...],
+  "çözüm_önerisi": ["Adım 1", "Adım 2", ...],
+  "bakım_tavsiyesi": ["Öneri 1", "Öneri 2", ...]
+}
+
+Cevabın **sadece geçerli JSON** olsun, başlama veya bitirme işareti koyma.
 """
 
     try:
         response = model.generate_content(
             contents=[prompt, img],
             generation_config=genai.types.GenerationConfig(
-                response_mime_type="application/json",
-                response_schema=AnalysisResult.model_json_schema(),
-                temperature=0.2,
+                response_mime_type="application/json",  # Hâlâ bunu kullanabiliriz
+                temperature=0.1,  # Düşük tut → daha tutarlı JSON
                 top_p=0.95,
+                candidate_count=1,
             ),
             safety_settings={
                 "HARM_CATEGORY_DANGEROUS_CONTENT": "BLOCK_NONE",
                 "HARM_CATEGORY_HARASSMENT": "BLOCK_NONE",
             }
         )
-        result = AnalysisResult.model_validate_json(response.text)
+
+        # JSON parse et ve Pydantic ile validate et
+        import json
+        raw_json = response.text.strip()
+        data = json.loads(raw_json)
+        result = AnalysisResult.model_validate(data)
         return model_name, result
 
+    except json.JSONDecodeError:
+        raise RuntimeError("Model JSON formatında cevap vermedi. Tekrar deneyin.")
     except Exception as e:
         raise RuntimeError(f"Analiz sırasında hata: {str(e)}")
 
