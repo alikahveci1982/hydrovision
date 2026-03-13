@@ -207,3 +207,36 @@ if st.button("🔍 ANALİZ ET VE PARÇA BUL", type="primary"):
             st.warning("Kota limitine ulaşıldı. Birkaç dakika bekleyin veya billing etkinleştirin.")
         elif "invalid" in str(e).lower() or "key" in str(e).lower():
             st.warning("API anahtarı geçersiz görünüyor. Yeni anahtar deneyin.")
+
+
+st.markdown("""
+<style>
+    /* Streamlit'in kendi padding/margin'lerini sıfırla */
+    .main .block-container {
+        padding-top: 0rem !important;
+        padding-bottom: 0rem !important;
+        padding-left: 0rem !important;
+        padding-right: 0rem !important;
+    }
+    
+    /* Üst menü/toolbar'ı gizle (mobil wrapper'da yardımcı olur) */
+    header { visibility: hidden; }
+    .stApp > header { display: none; }
+    
+    /* Footer'ı tamamen gizle */
+    footer { visibility: hidden !important; }
+    
+    /* Tam ekran hissi için body margin sıfırla */
+    body, html, [data-testid="stAppViewContainer"] {
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+    }
+    
+    /* Görseller ve içerikler tam genişlik */
+    .stImage, .stPlotlyChart, .element-container {
+        width: 100vw !important;
+        max-width: 100% !important;
+    }
+</style>
+""", unsafe_allow_html=True)
