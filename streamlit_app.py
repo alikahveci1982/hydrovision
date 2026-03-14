@@ -1,3 +1,9 @@
+# 
+
+**URL:** https://raw.githubusercontent.com/alikahveci1982/hydrovision/main/streamlit_app.py
+
+---
+
 import streamlit as st
 import google.generativeai as genai
 from PIL import Image
@@ -89,6 +95,8 @@ def get_best_model() -> str:
 # ─── STRUCTURED ÇIKTI MODELİ (Pydantic) ───────────────────────────────────────
 class AnalysisResult(BaseModel):
     parça_adı: str = Field(description="Kısa ve net parça ismi, örn: Yön Kontrol Valfi")
+    malzeme_tanitimi: str = Field(description="Parçanın yapıldığı malzeme hakkında kısa bilgi")
+    teknik_ozellikler: List[str] = Field(description="Parçanın teknik özellikleri (boyut, basınç, sıcaklık vb.)")
     arıza_analizi: List[str] = Field(description="Olası arıza nedenleri")
     çözüm_önerisi: List[str] = Field(description="Yapılması gereken adımlar")
     bakım_tavsiyesi: List[str] = Field(description="Önleyici bakım önerileri")
@@ -104,10 +112,12 @@ Sen uzman bir hidrolik sistemler mühendisisin. Görseli çok dikkatli incele.
 Aşağıdaki **tam JSON** formatında cevap ver. Ekstra metin, açıklama, markdown veya JSON dışı hiçbir şey yazma!
 
 {
-  "parça_adı": "Kısa ve net parça ismi, örn: Yön Kontrol Valfi",
-  "arıza_analizi": ["Olası neden 1", "Olası neden 2", ...],
-  "çözüm_önerisi": ["Adım 1", "Adım 2", ...],
-  "bakım_tavsiyesi": ["Öneri 1", "Öneri 2", ...]
+    "parça_adı": "Kısa ve net parça ismi, örn: Yön Kontrol Valfi",
+    "malzeme_tanitimi": "Parçanın yapıldığı malzeme hakkında kısa bilgi",
+    "teknik_ozellikler": ["Özellik 1", "Özellik 2", ...],
+    "arıza_analizi": ["Olası neden 1", "Olası neden 2", ...],
+    "çözüm_önerisi": ["Adım 1", "Adım 2", ...],
+    "bakım_tavsiyesi": ["Öneri 1", "Öneri 2", ...]
 }
 
 Cevabın **sadece geçerli JSON** olsun, başlama veya bitirme işareti koyma.
@@ -176,15 +186,20 @@ if st.button("🔍 ANALİZ ET VE PARÇA BUL", type="primary"):
 
         # Sonuçları güzel göster
         st.subheader(f"🔧 Parça: **{result.parça_adı}**")
-        st.markdown("**1. ARIZA ANALİZİ**")
+        st.markdown("**1. MALZEME TANITIMI**")
+        st.markdown(f"• {result.malzeme_tanitimi}")
+        st.markdown("**2. TEKNİK ÖZELLİKLER**")
+        for item in result.teknik_ozellikler:
+            st.markdown(f"• {item}")
+        st.markdown("**3. ARIZA ANALİZİ**")
         for item in result.arıza_analizi:
             st.markdown(f"• {item}")
 
-        st.markdown("**2. ÇÖZÜM ÖNERİSİ**")
+        st.markdown("**4. ÇÖZÜM ÖNERİSİ**")
         for item in result.çözüm_önerisi:
             st.markdown(f"• {item}")
 
-        st.markdown("**3. BAKIM TAVSİYESİ**")
+        st.markdown("**5. BAKIM TAVSİYESİ**")
         for item in result.bakım_tavsiyesi:
             st.markdown(f"• {item}")
 
