@@ -1,8 +1,7 @@
 # 
-
-**URL:** https://raw.githubusercontent.com/alikahveci1982/hydrovision/main/streamlit_app.py
-
----
+# **URL:** https://raw.githubusercontent.com/alikahveci1982/hydrovision/main/streamlit_app.py
+# 
+# ---
 
 import streamlit as st
 import google.generativeai as genai
