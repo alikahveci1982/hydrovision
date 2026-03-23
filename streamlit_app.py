@@ -1,153 +1,209 @@
-# 
-# **URL:** https://raw.githubusercontent.com/alikahveci1982/hydrovision/main/streamlit_app.py
-# 
-# ---
-
 import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 import urllib.parse
 from functools import lru_cache
-from typing import List
-from pydantic import BaseModel, Field
+from typing import List, Dict, Any, Optional
+from pydantic import BaseModel, field_validator
+import json
+import io
+
+# ─── CONFIGURATION & LANGUAGES ───────────────────────────────────────────────
+LANGUAGES = {
+    "TR": {
+        "title": "🤖 HYDROVISION PRO",
+        "caption": "🔧 Endüstriyel Arıza Analizi & Akıllı Sistem",
+        "api_key_label": "🔑 Gemini API Anahtarı",
+        "api_key_help": "https://aistudio.google.com/app/apikey",
+        "api_key_placeholder": "Anahtarınızı buraya yapıştırın...",
+        "api_key_button": "🔑 Sisteme Bağlan",
+        "api_key_info": "💡 Başlamak için lütfen API anahtarınızı girin.",
+        "api_key_change": "🔄 Anahtarı Güncelle",
+        "model_selection": "🤖 Yapay Zeka Modeli",
+        "upload_title": "### 📸 Analiz İçin Görsel Seçin",
+        "camera_input": "📷 FOTOĞRAF ÇEK",
+        "file_uploader": "🖼️ GALERİDEN YÜKLE",
+        "no_image_info": "Analiz için henüz bir görsel seçilmedi.",
+        "analyze_button": "🔍 ANALİZİ BAŞLAT",
+        "analyzing_status": "⚙️ Görüntü işleniyor ve analiz ediliyor...",
+        "complete_status": "✅ Analiz Tamamlandı",
+        "tabs": ["🏠 Özet", "📊 Teknik", "⚠️ Arıza & Çözüm", "📂 Şema"],
+        "material_label": "**Yapı/Malzeme:** ",
+        "faults_label": "Tespit Edilen Arızalar",
+        "solutions_label": "Çözüm ve Bakım Önerileri",
+        "purchase_button": "🛒 PARÇA FİYATLARINI ARAŞTIR",
+        "purchase_query": "Hidrolik {} fiyatları",
+        "error_label": "Sistem Hatası: {}",
+        "system_prompt": "Sen kıdemli bir hidrolik mühendisisin. Teknik, net ve yapılandırılmış JSON formatında cevap verirsin.",
+        "user_prompt": "Görseli ISO 1219 standartlarına göre analiz et. Profesyonel bir rapor hazırla."
+    },
+    "EN": {
+        "title": "🤖 HYDROVISION PRO",
+        "caption": "🔧 Industrial Fault Analysis & Smart System",
+        "api_key_label": "🔑 Gemini API Key",
+        "api_key_help": "https://aistudio.google.com/app/apikey",
+        "api_key_placeholder": "Paste your key here...",
+        "api_key_button": "🔑 Connect System",
+        "api_key_info": "💡 Please enter your API key to start.",
+        "api_key_change": "🔄 Update Key",
+        "model_selection": "🤖 AI Model",
+        "upload_title": "### 📸 Select Image for Analysis",
+        "camera_input": "📷 CAPTURE PHOTO",
+        "file_uploader": "🖼️ UPLOAD FROM GALLERY",
+        "no_image_info": "No image selected for analysis.",
+        "analyze_button": "🔍 START ANALYSIS",
+        "analyzing_status": "⚙️ Processing and analyzing image...",
+        "complete_status": "✅ Analysis Completed",
+        "tabs": ["🏠 Summary", "📊 Technical", "⚠️ Fault & Solution", "📂 Schema"],
+        "material_label": "**Structure/Material:** ",
+        "faults_label": "Detected Faults",
+        "solutions_label": "Solutions & Maintenance",
+        "purchase_button": "🛒 SEARCH PART PRICES",
+        "purchase_query": "Hydraulic {} price",
+        "error_label": "System Error: {}",
+        "system_prompt": "You are a senior hydraulic engineer. Provide technical, clear, and structured JSON responses.",
+        "user_prompt": "Analyze the image based on ISO 1219 standards. Prepare a professional report."
+    }
+}
 
 # ─── SAYFA AYARLARI ───────────────────────────────────────────────────────────
-st.set_page_config(
-    page_title="HydroVision Pro",
-    page_icon="⚙️",
-    layout="wide", # Tam genişlik
-    initial_sidebar_state="expanded" # Sidebar varsayılan olarak açık
- )
+st.set_page_config(page_title="HydroVision Pro", page_icon="⚙️", layout="wide", initial_sidebar_state="collapsed")
 
+# Modern Industrial Theme CSS (Fast Ops Optimized)
 st.markdown("""
 <style>
-    .main { background-color: #0e1117; color: white; }
+    /* Global Background & Text */
+    .main { 
+        background-color: #0B0E14; 
+        color: #E0E0E0 !important; 
+    }
+    
+    /* Typography */
+    h1, h2, h3 { 
+        color: #FFFFFF !important; 
+        font-family: 'Inter', sans-serif;
+        letter-spacing: -0.5px;
+        text-align: center;
+    }
+    p, span, label, .stMarkdown { 
+        color: #ADB5BD !important; 
+    }
+    
+    /* Sidebar Styling */
+    section[data-testid="stSidebar"] {
+        background-color: #12161F !important;
+        border-right: 1px solid #1E2330;
+    }
+    
+    /* FAST OPS: Devasa Butonlar */
     div.stButton > button {
         width: 100%;
-        height: 3em;
-        background-color: #ff4b4b;
-        color: white;
+        min-height: 100px !important;
+        background: linear-gradient(135deg, #3D5AFE 0%, #1A237E 100%);
+        color: white !important;
+        font-weight: 700 !important;
+        font-size: 22px !important;
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(61, 90, 254, 0.4);
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+    }
+    
+    /* Kamera Butonu (Kırmızı Vurgu) */
+    [data-testid="stCameraInput"] button {
+        background: linear-gradient(135deg, #FF5252 0%, #B71C1C 100%) !important;
+        min-height: 120px !important;
+    }
+    
+    div.stButton > button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(61, 90, 254, 0.6);
+    }
+    
+    /* Modern Result Cards */
+    .info-card { 
+        background: #161B22; 
+        padding: 25px; 
+        border-radius: 16px; 
+        margin-bottom: 20px; 
+        border-left: 6px solid #3D5AFE;
+        box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+    }
+    .fault-card { 
+        background: rgba(255, 82, 82, 0.1); 
+        padding: 25px; 
+        border-radius: 16px; 
+        border: 1px solid rgba(255, 82, 82, 0.3);
+        border-left: 6px solid #FF5252;
+        margin-bottom: 15px;
+    }
+    .solution-card { 
+        background: rgba(76, 175, 80, 0.1); 
+        padding: 25px; 
+        border-radius: 16px; 
+        border: 1px solid rgba(76, 175, 80, 0.3);
+        border-left: 6px solid #4CAF50;
+        margin-bottom: 15px;
+    }
+    
+    /* Hızlı Paylaşım Butonu */
+    .share-btn {
+        display: block;
+        width: 100%;
+        padding: 20px;
+        background: #25D366;
+        color: white !important;
+        text-align: center;
+        border-radius: 12px;
         font-weight: bold;
-        border-radius: 10px;
-        font-size: 16px;
-        margin: 10px 0;
+        text-decoration: none;
+        margin-top: 10px;
+        font-size: 18px;
     }
-    .stSuccess { background-color: #1e3a2f; }
-    
-    /* Streamlit'in kendi padding/margin'lerini sıfırla */
-    .main .block-container {
-        padding-top: 1rem !important;
-        padding-bottom: 1rem !important;
-        padding-left: 1rem !important;
-        padding-right: 1rem !important;
-    }
-    
-    /* Üst menü/toolbar'ı gizle (mobil wrapper'da yardımcı olur) */
-    header { visibility: hidden; }
-    .stApp > header { display: none; }
-    
-    /* Footer'ı tamamen gizle */
-    footer { visibility: hidden !important; }
-    
-    /* Tam ekran hissi için body margin sıfırla */
-    body, html, [data-testid="stAppViewContainer"] {
-        margin: 0 !important;
-        padding: 0 !important;
-        overflow-x: hidden !important;
-    }
-    
-    /* Görseller ve içerikler tam genişlik */
-    .stImage, .stPlotlyChart, .element-container {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-    
-    /* Sekmeler için stil */
-    .stTabs [data-baseweb="tab-list"] button [data-testid="stMarkdownContainer"] p {
-        font-size: 1.1rem;
-        font-weight: bold;
-    }
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 24px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        height: 50px;
-        white-space: nowrap;
-        border-top-left-radius: 7px;
-        border-top-right-radius: 7px;
-        gap: 1px;
-        padding-top: 10px;
-        padding-bottom: 10px;
-        padding-left: 20px;
-        padding-right: 20px;
-    }
-    .stTabs [aria-selected="true"] {
-        background-color: #ff4b4b;
-        color: white;
-    }
-    .stTabs [aria-selected="false"] {
-        background-color: #0e1117;
-        color: #aaaaaa;
+
+    /* Streamlit Sidebar Padding Fix for Mobile */
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+        padding-top: 2rem;
     }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🤖 HYDROVISION PRO")
-st.caption("🔧 Arıza Tespit & Akıllı Satın Alma")
+# ─── SIDEBAR & LOGIC ──────────────────────────────────────────────────────────
+if "lang" not in st.session_state: st.session_state.lang = "TR"
+with st.sidebar:
+    st.markdown("### ⚙️ Gemini Settings")
+    if "api_key" not in st.session_state:
+        try: st.session_state.api_key = st.secrets.get("GEMINI_API_KEY", "")
+        except: st.session_state.api_key = ""
+    
+    api_key_input = st.text_input("🔑 API Key", type="password", value=st.session_state.api_key)
+    if api_key_input:
+        st.session_state.api_key = api_key_input
+        genai.configure(api_key=api_key_input)
+        try:
+            available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+            display_models = [m for m in available_models if 'flash' in m.lower() or 'pro' in m.lower()]
+            selected_model = st.selectbox("Active AI Engine", display_models if display_models else available_models)
+        except:
+            selected_model = "gemini-1.5-flash"
 
-# ─── API ANAHTARI YÖNETİMİ ────────────────────────────────────────────────────
-if "api_key" not in st.session_state:
-    st.session_state.api_key = ""
-if "api_key_ok" not in st.session_state:
-    st.session_state.api_key_ok = False
+# --- MAIN UI ---
+st.markdown(f"<h1>🤖 HYDROVISION PRO</h1>", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align:center; font-size:1.2rem; margin-top:-15px;'>🔧 {LANGUAGES[st.session_state.lang]['caption']}</p>", unsafe_allow_html=True)
 
-if not st.session_state.api_key_ok:
-    api_key = st.text_input(
-        "🔑 Gemini API Anahtarı",
-        type="password",
-        value=st.session_state.api_key,
-        placeholder="AIza... şeklinde başlayan anahtarınızı girin",
-        help="https://aistudio.google.com/app/apikey adresinden ücretsiz alabilirsiniz"
-     )
-    if api_key:
-        st.session_state.api_key = api_key
-        if st.button("🔑 API Anahtarını Onayla", type="primary"):
-            genai.configure(api_key=api_key)
-            st.session_state.api_key_ok = True
-            st.rerun()
-    else:
-        st.info("👆 Başlamak için Gemini API anahtarınızı girin ve onaylayın.")
-        st.stop()
-else:
-    genai.configure(api_key=st.session_state.api_key)
-    if st.sidebar.button("🔄 API Anahtarını Değiştir"):
-        st.session_state.api_key_ok = False
-        st.rerun()
+# Fast Access Language Selection
+col_l, col_r = st.columns([8, 2])
+with col_r:
+    st.session_state.lang = st.selectbox("", ["TR", "EN"], index=0 if st.session_state.lang == "TR" else 1, label_visibility="collapsed")
+L = LANGUAGES[st.session_state.lang]
 
-# ─── MODEL ÖNCELİK LİSTESİ ────────────────────────────────────────────────────
-PREFERRED_MODELS = [
-    "models/gemini-3.1-pro-preview",
-    "models/gemini-2.5-pro",
-    "models/gemini-2.5-flash",
-    "models/gemini-2.5-flash-lite",
-    "models/gemini-3-flash",
-]
+if not st.session_state.get("api_key"):
+    st.info(L["api_key_info"])
+    st.stop()
 
-@lru_cache(maxsize=1)
-def get_available_models() -> List[str]:
-    try:
-        models = genai.list_models()
-        return [m.name for m in models if "generateContent" in m.supported_generation_methods and "gemini" in m.name.lower()]
-    except Exception:
-        return []
-
-def get_best_model() -> str:
-    available = get_available_models()
-    for pref in PREFERRED_MODELS:
-        if pref in available: return pref
-    return available[0] if available else "models/gemini-pro"
-
-# ─── STRUCTURED ÇIKTI MODELİ ──────────────────────────────────────────────────
+# ─── MODELS & DATA ────────────────────────────────────────────────────────────
 class AnalysisResult(BaseModel):
     parça_adı: str
     malzeme_tanitimi: str
@@ -157,65 +213,101 @@ class AnalysisResult(BaseModel):
     bakım_tavsiyesi: List[str]
     sema_analizi: List[str]
 
-def analyze_image(img: Image.Image) -> tuple[str, AnalysisResult]:
-    model_name = get_best_model()
-    model = genai.GenerativeModel(model_name)
-    prompt = """
-Sen uzman bir hidrolik sistemler mühendisisin. Gönderilen görsel bir hidrolik parça fotoğrafı veya bir hidrolik devre şeması olabilir. 
-Eğer parça ise tanımla, arızaları analiz et. Eğer şema ise sembolleri ve devrenin çalışmasını açıkla.
-Aşağıdaki tam JSON formatında cevap ver:
-{
-    "parça_adı": "...",
-    "malzeme_tanitimi": "...",
-    "teknik_ozellikler": ["...", "..."],
-    "arıza_analizi": ["...", "..."],
-    "çözüm_önerisi": ["...", "..."],
-    "bakım_tavsiyesi": ["...", "..."],
-    "sema_analizi": ["...", "..."]
-}
-"""
-    response = model.generate_content(
-        contents=[prompt, img],
-        generation_config=genai.types.GenerationConfig(response_mime_type="application/json", temperature=0.1)
-    )
-    import json
-    return model_name, AnalysisResult.model_validate(json.loads(response.text.strip()))
+    @field_validator('teknik_ozellikler', 'arıza_analizi', 'çözüm_önerisi', 'bakım_tavsiyesi', 'sema_analizi', mode='before')
+    @classmethod
+    def ensure_list(cls, v):
+        if isinstance(v, str): return [v]
+        return v
 
-# ─── GÖRSEL YÜKLEME ───────────────────────────────────────────────────────────
-st.markdown("### 📸 Görsel Yükleme / Çekme")
-col1, col2 = st.columns(2)
-with col1: camera_input = st.camera_input("📷 Kamerayı Aç")
-with col2: uploaded_file = st.file_uploader("📂 Dosya Seç", type=["jpg", "jpeg", "png", "webp"])
+def analyze_image(img: Image.Image, model_name: str, lang: str) -> AnalysisResult:
+    L = LANGUAGES[lang]
+    model = genai.GenerativeModel(model_name=model_name, system_instruction=L["system_prompt"])
+    prompt = f"{L['user_prompt']}\nZORUNLU JSON FORMATI:\n{{\"parça_adı\": \"...\", \"malzeme_tanitimi\": \"...\", \"teknik_ozellikler\": [\"...\"], \"arıza_analizi\": [\"...\"], \"çözüm_önerisi\": [\"...\"], \"bakım_tavsiyesi\": [\"...\"], \"sema_analizi\": [\"...\"]}}"
+    response = model.generate_content(contents=[prompt, img], generation_config=genai.types.GenerationConfig(response_mime_type="application/json", temperature=0.1))
+    return AnalysisResult.model_validate_json(response.text.strip())
 
-final_file = camera_input or uploaded_file
-if not final_file:
-    st.info("Lütfen bir görsel yükleyin.")
-    st.stop()
+# ─── UI ───────────────────────────────────────────────────────────────────────
+st.markdown(L["upload_title"])
+c1, c2 = st.columns(2)
+with c1: cam = st.camera_input(L["camera_input"])
+with c2: upload = st.file_uploader(L["file_uploader"], type=["jpg", "png", "webp"])
 
-img = Image.open(final_file)
-st.image(img, caption="Analiz Edilecek Görsel", use_container_width=True)
+final_file = cam or upload
+if final_file:
+    img = Image.open(final_file)
+    if max(img.size) > 1024: img.thumbnail((1024, 1024))
+    st.image(img, use_container_width=True)
+    
+    if st.button(L["analyze_button"], type="primary"):
+        try:
+            with st.status(L["analyzing_status"]) as status:
+                result = analyze_image(img, selected_model, st.session_state.lang)
+                status.update(label=L["complete_status"], state="complete")
 
-# ─── ANALİZ BUTONU ────────────────────────────────────────────────────────────
-if st.button("🔍 ANALİZ ET VE PARÇA BUL", type="primary"):
-    try:
-        with st.status("⚙️ Analiz ediliyor...", expanded=True) as status:
-            model_name, result = analyze_image(img)
-            status.update(label="✅ Tamamlandı!", state="complete")
-
-        st.subheader(f"🔧 Parça: **{result.parça_adı}**")
-        t1, t2, t3, t4 = st.tabs(["Tanıtım", "Teknik", "Arıza & Çözüm", "Şema Analizi"])
-        with t1: st.markdown(f"**Malzeme:** {result.malzeme_tanitimi}")
-        with t2: 
-            for i in result.teknik_ozellikler: st.markdown(f"• {i}")
-        with t3:
-            st.markdown("**Arızalar:**")
+            st.markdown(f'<div class="info-card"><h2 style="color:white !important; margin:0;">{result.parça_adı.upper()}</h2><p style="margin-top:5px;">{L["material_label"]}{result.malzeme_tanitimi}</p></div>', unsafe_allow_html=True)
+            
+            # --- Vertical Analysis Cards (Fast Ops) ---
+            st.markdown("### 📍 Teknik Özet")
+            for i in result.teknik_ozellikler: st.markdown(f"🔹 {i}")
+            
+            st.markdown('<div class="fault-card"><h4 style="color:#FF5252 !important; margin-bottom:10px;">⚠️ Tespit Edilen Kritik Hatalar</h4>', unsafe_allow_html=True)
             for i in result.arıza_analizi: st.markdown(f"• {i}")
-            st.markdown("**Çözümler:**")
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            st.markdown('<div class="solution-card"><h4 style="color:#4CAF50 !important; margin-bottom:10px;">✅ Önerilen Aksiyon Planı</h4>', unsafe_allow_html=True)
             for i in result.çözüm_önerisi: st.markdown(f"• {i}")
-        with t4:
-            for i in result.sema_analizi: st.markdown(f"• {i}")
+            st.markdown(f"<br><b>🔧 Bakım:</b> {', '.join(result.bakım_tavsiyesi)}", unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
 
-        query = urllib.parse.quote(f"Hidrolik {result.parça_adı} fiyatları")
-        st.markdown(f'<a href="https://www.google.com/search?q={query}" target="_blank"><button style="width:100%; background:#4285F4; color:white; border:none; border-radius:10px; padding:12px; cursor:pointer;">🛒 Satın Alma Seçenekleri</button></a>', unsafe_allow_html=True )
-    except Exception as e:
-        st.error(f"Hata: {str(e)}")
+            if result.sema_analizi:
+                st.markdown('<div class="info-card" style="border-left-color: #00BCD4;"><h4 style="color:#00BCD4 !important; margin-bottom:10px;">🔍 ISO 1219 Şema Analizi</h4>', unsafe_allow_html=True)
+                for i in result.sema_analizi: st.markdown(f"• {i}")
+                st.markdown('</div>', unsafe_allow_html=True)
+
+            # --- Quick Actions (Fast Ops) ---
+            st.markdown("---")
+            
+            # TXT Report Generation
+            report_text = f"HYDROVISION PRO ANALİZ RAPORU\n"
+            report_text += f"---------------------------\n"
+            report_text += f"Parça: {result.parça_adı}\n"
+            report_text += f"Malzeme: {result.malzeme_tanitimi}\n\n"
+            report_text += f"Teknik Özellikler:\n" + "\n".join([f"- {i}" for i in result.teknik_ozellikler]) + "\n\n"
+            report_text += f"Arıza Analizi:\n" + "\n".join([f"- {i}" for i in result.arıza_analizi]) + "\n\n"
+            report_text += f"Çözüm Önerileri:\n" + "\n".join([f"- {i}" for i in result.çözüm_önerisi]) + "\n\n"
+            report_text += f"Bakım Tavsiyesi: {', '.join(result.bakım_tavsiyesi)}\n"
+            
+            # Download Button
+            st.download_button(
+                label="📥 RAPORU İNDİR (TXT)",
+                data=report_text,
+                file_name=f"hydrovision_{result.parça_adı.lower().replace(' ', '_')}.txt",
+                mime="text/plain"
+            )
+
+            # WhatsApp Share
+            whatsapp_msg = f"*HydroVision Pro Analiz Raporu*\n\n"
+            whatsapp_msg += f"*Parça:* {result.parça_adı}\n"
+            whatsapp_msg += f"*Arıza:* {result.arıza_analizi[0] if result.arıza_analizi else '-'}\n"
+            whatsapp_msg += f"*Çözüm:* {result.çözüm_önerisi[0] if result.çözüm_önerisi else '-'}"
+            wa_link = f"https://wa.me/?text={urllib.parse.quote(whatsapp_msg)}"
+            st.markdown(f'<a href="{wa_link}" target="_blank" class="share-btn">📱 WHATSAPP İLE PAYLAŞ</a>', unsafe_allow_html=True)
+
+            # Google Search
+            query = urllib.parse.quote(L["purchase_query"].format(result.parça_adı))
+            st.markdown(f'<a href="https://www.google.com/search?q={query}" target="_blank" style="text-decoration:none;"><div style="width:100%; background:linear-gradient(90deg, #3D5AFE 0%, #1A237E 100%); color:white; text-align:center; border-radius:12px; padding:18px; font-weight:bold; margin-top:10px; box-shadow: 0 4px 15px rgba(61, 90, 254, 0.3);"> {L["purchase_button"]} </div></a>', unsafe_allow_html=True)
+        except Exception as e:
+            st.error(L["error_label"].format(str(e)))
+            st.markdown("""
+            <div class="fault-card">
+                <h4>💡 Teknik İpucu</h4>
+                <p>Analiz kalitesini artırmak için:</p>
+                <ul>
+                    <li>Parçayı daha aydınlık bir ortamda çekin.</li>
+                    <li>Kamerayı parçaya dik açıyla tutun.</li>
+                    <li>Şema ise çizgilerin net çıktığından emin olun.</li>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
+else:
+    st.info(L["no_image_info"])
