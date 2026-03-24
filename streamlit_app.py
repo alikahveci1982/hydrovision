@@ -131,38 +131,39 @@ p, span, label, div, .stMarkdown {
     font-family: 'Exo 2', sans-serif !important;
 }
 
-/* ── SIDEBAR COLLAPSE BUTTON KESİN ÇÖZÜM ── */
-/* Butonun içindeki "double_arrow_right" yazısını her türlü katmanda öldür */
-[data-testid="stSidebarCollapsedControl"] button p,
-[data-testid="stSidebarCollapsedControl"] button span,
-[data-testid="stSidebarCollapsedControl"] button div {
-    display: none !important;
-    color: transparent !important;
+/* ── SIDEBAR COLLAPSE BUTTON NİHAİ ÇÖZÜM ── */
+/* Butonun içindeki metni (double_arrow_right) bul ve her koşulda yok et */
+[data-testid="stSidebarCollapsedControl"] button * {
     font-size: 0 !important;
+    color: transparent !important;
+    line-height: 0 !important;
+    display: none !important; /* Tüm alt öğeleri gizle */
 }
 
-/* Butonu temiz bir kutu haline getir ve ikon yerleştir */
+/* Butonun kendisini yeniden boyutlandır ve temizle */
 [data-testid="stSidebarCollapsedControl"] button {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     background: var(--bg-elevated) !important;
     border: 1px solid var(--border) !important;
     border-radius: 0 8px 8px 0 !important;
     width: 44px !important;
     height: 44px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
     position: relative !important;
 }
 
+/* Kendi ikonumuzu (☰) pseudo-element olarak en üste ekle */
 [data-testid="stSidebarCollapsedControl"] button::before {
     content: '☰' !important;
-    color: var(--accent-cyan) !important;
+    display: block !important;
     font-size: 24px !important;
-    position: absolute !important;
+    color: var(--accent-cyan) !important;
     visibility: visible !important;
+    position: absolute !important;
 }
 
-/* Menü açıkken üstteki kapatma butonunu düzenle */
+/* Menü açıkken üstteki X kapatma ikonunun rengini koru */
 [data-testid="stSidebarCollapseButton"] button svg {
     fill: var(--accent-cyan) !important;
 }
