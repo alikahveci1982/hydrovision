@@ -72,6 +72,7 @@ st.set_page_config(page_title="HydroVision Pro", page_icon="⚙️", layout="wid
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 
 :root {
     --bg-base: #050e1a;
@@ -259,6 +260,44 @@ div.stButton > button:hover {
     text-decoration: none;
     margin-top: 10px;
     box-shadow: 0 4px 16px rgba(37,211,102,0.25);
+}
+
+/* ── SIDEBAR COLLAPSE BUTTON İKON DÜZELTMESİ ── */
+[data-testid="collapsedControl"],
+button[kind="header"],
+[data-testid="stSidebarCollapsedControl"] {
+    font-family: 'Material Icons' !important;
+    font-size: 0 !important;
+}
+[data-testid="collapsedControl"] span,
+[data-testid="stSidebarCollapsedControl"] span {
+    font-family: 'Material Icons' !important;
+    font-size: 24px !important;
+    font-style: normal !important;
+    letter-spacing: normal !important;
+}
+/* Yazı olarak çıkan ikon metnini gizle, ok karakteri göster */
+button[data-testid="collapsedControl"] p,
+[data-testid="stSidebarCollapseButton"] span {
+    font-size: 0 !important;
+    visibility: hidden !important;
+}
+[data-testid="stSidebarCollapseButton"] button {
+    background: var(--bg-elevated) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 8px !important;
+    color: var(--accent-cyan) !important;
+    width: 36px !important;
+    height: 36px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+[data-testid="stSidebarCollapseButton"] button::after {
+    content: '☰' !important;
+    font-size: 18px !important;
+    color: var(--accent-cyan) !important;
+    visibility: visible !important;
 }
 
 ::-webkit-scrollbar { width: 6px; }
