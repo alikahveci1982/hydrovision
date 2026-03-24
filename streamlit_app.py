@@ -67,8 +67,9 @@ LANGUAGES = {
 }
 
 # ─── SAYFA AYARLARI ───────────────────────────────────────────────────────────
+st.set_page_config(page_title="HydroVision Pro", page_icon="⚙️", layout="wide", initial_sidebar_state="collapsed")
 
-  st.markdown("""
+st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap');
 
@@ -88,7 +89,6 @@ LANGUAGES = {
     --glow-cyan: 0 0 20px rgba(0,212,232,0.3);
 }
 
-/* ── GENEL ZEMIN ── */
 html, body, .stApp, [data-testid="stAppViewContainer"] {
     background-color: var(--bg-base) !important;
     background-image:
@@ -98,7 +98,10 @@ html, body, .stApp, [data-testid="stAppViewContainer"] {
     font-family: 'Exo 2', sans-serif !important;
 }
 
-[data-testid="stHeader"] { background: rgba(5,14,26,0.9) !important; border-bottom: 1px solid var(--border); }
+[data-testid="stHeader"] {
+    background: rgba(5,14,26,0.9) !important;
+    border-bottom: 1px solid var(--border);
+}
 
 .main .block-container {
     background: transparent !important;
@@ -106,21 +109,11 @@ html, body, .stApp, [data-testid="stAppViewContainer"] {
     max-width: 1100px;
 }
 
-/* ── SIDEBAR ── */
 section[data-testid="stSidebar"] {
     background-color: var(--bg-panel) !important;
     border-right: 1px solid var(--border) !important;
 }
-section[data-testid="stSidebar"]::after {
-    content: '';
-    position: absolute;
-    top: 0; right: -1px;
-    width: 1px; height: 100%;
-    background: linear-gradient(180deg, transparent, var(--accent-cyan), transparent);
-    opacity: 0.5;
-}
 
-/* ── BAŞLIKLAR ── */
 h1, h2, h3 {
     color: var(--text-primary) !important;
     font-family: 'Rajdhani', sans-serif !important;
@@ -138,7 +131,6 @@ p, span, label, div, .stMarkdown {
     font-family: 'Exo 2', sans-serif !important;
 }
 
-/* ── INPUT / SELECTBOX ── */
 [data-testid="stTextInput"] input,
 [data-testid="stSelectbox"] > div > div {
     background: var(--bg-card) !important;
@@ -147,15 +139,12 @@ p, span, label, div, .stMarkdown {
     color: var(--text-primary) !important;
     font-family: 'Share Tech Mono', monospace !important;
     font-size: 13px !important;
-    transition: border-color 0.2s, box-shadow 0.2s !important;
 }
 [data-testid="stTextInput"] input:focus {
     border-color: var(--accent-cyan) !important;
     box-shadow: var(--glow-cyan) !important;
 }
 
-/* ── ANA ANALİZ BUTONU ── */
-div.stButton > button[kind="primary"],
 div.stButton > button {
     width: 100%;
     min-height: 56px !important;
@@ -177,7 +166,6 @@ div.stButton > button:hover {
     box-shadow: 0 8px 32px rgba(0,212,232,0.4) !important;
 }
 
-/* ── KAMERA BUTONU ── */
 [data-testid="stCameraInput"] button {
     background: linear-gradient(135deg, var(--accent-orange), #cc3d00) !important;
     color: white !important;
@@ -187,20 +175,17 @@ div.stButton > button:hover {
     border: none !important;
 }
 
-/* ── UPLOAD ALANI ── */
 [data-testid="stFileUploader"] {
     background: var(--bg-card) !important;
     border: 2px dashed var(--border) !important;
     border-radius: 14px !important;
     padding: 12px !important;
-    transition: border-color 0.2s !important;
 }
 [data-testid="stFileUploader"]:hover {
     border-color: var(--accent-cyan) !important;
     box-shadow: var(--glow-cyan) !important;
 }
 
-/* ── KAMERA ALANI ── */
 [data-testid="stCameraInput"] {
     background: var(--bg-card) !important;
     border: 1px solid var(--border) !important;
@@ -208,7 +193,6 @@ div.stButton > button:hover {
     overflow: hidden !important;
 }
 
-/* ── KARTLAR ── */
 .info-card {
     background: var(--bg-card);
     padding: 20px 24px;
@@ -234,14 +218,12 @@ div.stButton > button:hover {
     margin-bottom: 12px;
 }
 
-/* ── STATUS / SPINNER ── */
 [data-testid="stStatusWidget"] {
     background: var(--bg-card) !important;
     border: 1px solid var(--border) !important;
     border-radius: 10px !important;
 }
 
-/* ── INFO / WARNING BOXES ── */
 [data-testid="stAlert"] {
     background: var(--bg-elevated) !important;
     border: 1px solid var(--border) !important;
@@ -249,7 +231,6 @@ div.stButton > button:hover {
     color: var(--text-secondary) !important;
 }
 
-/* ── DOWNLOAD BUTONU ── */
 [data-testid="stDownloadButton"] button {
     background: var(--bg-elevated) !important;
     border: 1px solid var(--border) !important;
@@ -263,7 +244,6 @@ div.stButton > button:hover {
     box-shadow: var(--glow-cyan) !important;
 }
 
-/* ── WHATSAPP & GOOGLE BUTONLARI ── */
 .share-btn {
     display: block;
     width: 100%;
@@ -278,122 +258,27 @@ div.stButton > button:hover {
     letter-spacing: 2px;
     text-decoration: none;
     margin-top: 10px;
-    transition: all 0.2s;
     box-shadow: 0 4px 16px rgba(37,211,102,0.25);
 }
-.share-btn:hover { box-shadow: 0 8px 24px rgba(37,211,102,0.4); transform: translateY(-2px); }
 
-/* ── SCROLLBAR ── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg-base); }
 ::-webkit-scrollbar-thumb { background: var(--accent-blue); border-radius: 3px; }
 </style>
-""", unsafe_allow_html=True)  /* Global Background & Text */
-    .main { 
-        background-color: #0B0E14; 
-        color: #E0E0E0 !important; 
-    }
-    
-    /* Typography */
-    h1, h2, h3 { 
-        color: #FFFFFF !important; 
-        font-family: 'Inter', sans-serif;
-        letter-spacing: -0.5px;
-        text-align: center;
-    }
-    p, span, label, .stMarkdown { 
-        color: #ADB5BD !important; 
-    }
-    
-    /* Sidebar Styling */
-    section[data-testid="stSidebar"] {
-        background-color: #12161F !important;
-        border-right: 1px solid #1E2330;
-    }
-    
-    /* FAST OPS: Devasa Butonlar */
-    div.stButton > button {
-        width: 100%;
-        min-height: 100px !important;
-        background: linear-gradient(135deg, #3D5AFE 0%, #1A237E 100%);
-        color: white !important;
-        font-weight: 700 !important;
-        font-size: 22px !important;
-        border-radius: 15px;
-        border: none;
-        box-shadow: 0 4px 15px rgba(61, 90, 254, 0.4);
-        transition: all 0.3s ease;
-        text-transform: uppercase;
-        margin-bottom: 10px;
-    }
-    
-    /* Kamera Butonu (Kırmızı Vurgu) */
-    [data-testid="stCameraInput"] button {
-        background: linear-gradient(135deg, #FF5252 0%, #B71C1C 100%) !important;
-        min-height: 120px !important;
-    }
-    
-    div.stButton > button:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 25px rgba(61, 90, 254, 0.6);
-    }
-    
-    /* Modern Result Cards */
-    .info-card { 
-        background: #161B22; 
-        padding: 25px; 
-        border-radius: 16px; 
-        margin-bottom: 20px; 
-        border-left: 6px solid #3D5AFE;
-        box-shadow: 0 6px 16px rgba(0,0,0,0.4);
-    }
-    .fault-card { 
-        background: rgba(255, 82, 82, 0.1); 
-        padding: 25px; 
-        border-radius: 16px; 
-        border: 1px solid rgba(255, 82, 82, 0.3);
-        border-left: 6px solid #FF5252;
-        margin-bottom: 15px;
-    }
-    .solution-card { 
-        background: rgba(76, 175, 80, 0.1); 
-        padding: 25px; 
-        border-radius: 16px; 
-        border: 1px solid rgba(76, 175, 80, 0.3);
-        border-left: 6px solid #4CAF50;
-        margin-bottom: 15px;
-    }
-    
-    /* Hızlı Paylaşım Butonu */
-    .share-btn {
-        display: block;
-        width: 100%;
-        padding: 20px;
-        background: #25D366;
-        color: white !important;
-        text-align: center;
-        border-radius: 12px;
-        font-weight: bold;
-        text-decoration: none;
-        margin-top: 10px;
-        font-size: 18px;
-    }
-
-    /* Streamlit Sidebar Padding Fix for Mobile */
-    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
-        padding-top: 2rem;
-    }
-</style>
 """, unsafe_allow_html=True)
 
 # ─── SIDEBAR & LOGIC ──────────────────────────────────────────────────────────
-if "lang" not in st.session_state: st.session_state.lang = "TR"
+if "lang" not in st.session_state:
+    st.session_state.lang = "TR"
+
 with st.sidebar:
     st.markdown("### ⚙️ Gemini Settings")
     if "api_key" not in st.session_state:
-        try: st.session_state.api_key = st.secrets.get("GEMINI_API_KEY", "")
-        except: st.session_state.api_key = ""
-    
+        try:
+            st.session_state.api_key = st.secrets.get("GEMINI_API_KEY", "")
+        except:
+            st.session_state.api_key = ""
+
     api_key_input = st.text_input("🔑 API Key", type="password", value=st.session_state.api_key)
     if api_key_input:
         st.session_state.api_key = api_key_input
@@ -405,11 +290,10 @@ with st.sidebar:
         except:
             selected_model = "gemini-1.5-flash"
 
-# --- MAIN UI ---
-st.markdown(f"<h1>🤖 HYDROVISION PRO</h1>", unsafe_allow_html=True)
-st.markdown(f"<p style='text-align:center; font-size:1.2rem; margin-top:-15px;'>🔧 {LANGUAGES[st.session_state.lang]['caption']}</p>", unsafe_allow_html=True)
+# ─── MAIN UI ──────────────────────────────────────────────────────────────────
+st.markdown("<h1>⚙️ HYDROVISION PRO</h1>", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align:center; font-size:1.1rem; margin-top:-15px; font-family: Share Tech Mono, monospace; letter-spacing:2px;'>🔧 {LANGUAGES[st.session_state.lang]['caption']}</p>", unsafe_allow_html=True)
 
-# Fast Access Language Selection
 col_l, col_r = st.columns([8, 2])
 with col_r:
     st.session_state.lang = st.selectbox("", ["TR", "EN"], index=0 if st.session_state.lang == "TR" else 1, label_visibility="collapsed")
@@ -432,68 +316,75 @@ class AnalysisResult(BaseModel):
     @field_validator('teknik_ozellikler', 'arıza_analizi', 'çözüm_önerisi', 'bakım_tavsiyesi', 'sema_analizi', mode='before')
     @classmethod
     def ensure_list(cls, v):
-        if isinstance(v, str): return [v]
+        if isinstance(v, str):
+            return [v]
         return v
 
 def analyze_image(img: Image.Image, model_name: str, lang: str) -> AnalysisResult:
     L = LANGUAGES[lang]
     model = genai.GenerativeModel(model_name=model_name, system_instruction=L["system_prompt"])
     prompt = f"{L['user_prompt']}\nZORUNLU JSON FORMATI:\n{{\"parça_adı\": \"...\", \"malzeme_tanitimi\": \"...\", \"teknik_ozellikler\": [\"...\"], \"arıza_analizi\": [\"...\"], \"çözüm_önerisi\": [\"...\"], \"bakım_tavsiyesi\": [\"...\"], \"sema_analizi\": [\"...\"]}}"
-    response = model.generate_content(contents=[prompt, img], generation_config=genai.types.GenerationConfig(response_mime_type="application/json", temperature=0.1))
+    response = model.generate_content(
+        contents=[prompt, img],
+        generation_config=genai.types.GenerationConfig(response_mime_type="application/json", temperature=0.1)
+    )
     return AnalysisResult.model_validate_json(response.text.strip())
 
 # ─── UI ───────────────────────────────────────────────────────────────────────
 st.markdown(L["upload_title"])
 c1, c2 = st.columns(2)
-with c1: cam = st.camera_input(L["camera_input"])
-with c2: upload = st.file_uploader(L["file_uploader"], type=["jpg", "png", "webp"])
+with c1:
+    cam = st.camera_input(L["camera_input"])
+with c2:
+    upload = st.file_uploader(L["file_uploader"], type=["jpg", "png", "webp"])
 
 final_file = cam or upload
 if final_file:
     img = Image.open(final_file)
-    if max(img.size) > 1024: img.thumbnail((1024, 1024))
+    if max(img.size) > 1024:
+        img.thumbnail((1024, 1024))
     st.image(img, use_container_width=True)
-    
+
     if st.button(L["analyze_button"], type="primary"):
         try:
             with st.status(L["analyzing_status"]) as status:
                 result = analyze_image(img, selected_model, st.session_state.lang)
                 status.update(label=L["complete_status"], state="complete")
 
-            st.markdown(f'<div class="info-card"><h2 style="color:white !important; margin:0;">{result.parça_adı.upper()}</h2><p style="margin-top:5px;">{L["material_label"]}{result.malzeme_tanitimi}</p></div>', unsafe_allow_html=True)
-            
-            # --- Vertical Analysis Cards (Fast Ops) ---
+            st.markdown(f'<div class="info-card"><h2 style="color:var(--text-primary) !important; margin:0;">{result.parça_adı.upper()}</h2><p style="margin-top:5px;">{L["material_label"]}{result.malzeme_tanitimi}</p></div>', unsafe_allow_html=True)
+
             st.markdown("### 📍 Teknik Özet")
-            for i in result.teknik_ozellikler: st.markdown(f"🔹 {i}")
-            
-            st.markdown('<div class="fault-card"><h4 style="color:#FF5252 !important; margin-bottom:10px;">⚠️ Tespit Edilen Kritik Hatalar</h4>', unsafe_allow_html=True)
-            for i in result.arıza_analizi: st.markdown(f"• {i}")
+            for i in result.teknik_ozellikler:
+                st.markdown(f"🔹 {i}")
+
+            st.markdown('<div class="fault-card"><h4 style="color:var(--accent-orange) !important; margin-bottom:10px;">⚠️ Tespit Edilen Kritik Hatalar</h4>', unsafe_allow_html=True)
+            for i in result.arıza_analizi:
+                st.markdown(f"• {i}")
             st.markdown('</div>', unsafe_allow_html=True)
-            
-            st.markdown('<div class="solution-card"><h4 style="color:#4CAF50 !important; margin-bottom:10px;">✅ Önerilen Aksiyon Planı</h4>', unsafe_allow_html=True)
-            for i in result.çözüm_önerisi: st.markdown(f"• {i}")
+
+            st.markdown('<div class="solution-card"><h4 style="color:var(--accent-green) !important; margin-bottom:10px;">✅ Önerilen Aksiyon Planı</h4>', unsafe_allow_html=True)
+            for i in result.çözüm_önerisi:
+                st.markdown(f"• {i}")
             st.markdown(f"<br><b>🔧 Bakım:</b> {', '.join(result.bakım_tavsiyesi)}", unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
 
             if result.sema_analizi:
-                st.markdown('<div class="info-card" style="border-left-color: #00BCD4;"><h4 style="color:#00BCD4 !important; margin-bottom:10px;">🔍 ISO 1219 Şema Analizi</h4>', unsafe_allow_html=True)
-                for i in result.sema_analizi: st.markdown(f"• {i}")
+                st.markdown('<div class="info-card" style="border-left-color: var(--accent-cyan);"><h4 style="color:var(--accent-cyan) !important; margin-bottom:10px;">🔍 ISO 1219 Şema Analizi</h4>', unsafe_allow_html=True)
+                for i in result.sema_analizi:
+                    st.markdown(f"• {i}")
                 st.markdown('</div>', unsafe_allow_html=True)
 
-            # --- Quick Actions (Fast Ops) ---
             st.markdown("---")
-            
-            # TXT Report Generation
-            report_text = f"HYDROVISION PRO ANALİZ RAPORU\n"
-            report_text += f"---------------------------\n"
+
+            report_text = "HYDROVISION PRO ANALİZ RAPORU\n"
+            report_text += "---------------------------\n"
             report_text += f"Parça: {result.parça_adı}\n"
             report_text += f"Malzeme: {result.malzeme_tanitimi}\n\n"
-            report_text += f"Teknik Özellikler:\n" + "\n".join([f"- {i}" for i in result.teknik_ozellikler]) + "\n\n"
-            report_text += f"Arıza Analizi:\n" + "\n".join([f"- {i}" for i in result.arıza_analizi]) + "\n\n"
-            report_text += f"Çözüm Önerileri:\n" + "\n".join([f"- {i}" for i in result.çözüm_önerisi]) + "\n\n"
+            report_text += "Teknik Özellikler:\n" + "\n".join([f"- {i}" for i in result.teknik_ozellikler]) + "\n\n"
+            report_text += "Arıza Analizi:\n" + "\n".join([f"- {i}" for i in result.arıza_analizi]) + "\n\n"
+            report_text += "Çözüm Önerileri:\n" + "\n".join([f"- {i}" for i in result.çözüm_önerisi]) + "\n\n"
             report_text += f"Bakım Tavsiyesi: {', '.join(result.bakım_tavsiyesi)}\n"
-            
-            # Download Button
+
             st.download_button(
                 label="📥 RAPORU İNDİR (TXT)",
                 data=report_text,
@@ -501,7 +392,6 @@ if final_file:
                 mime="text/plain"
             )
 
-            # WhatsApp Share
             whatsapp_msg = f"*HydroVision Pro Analiz Raporu*\n\n"
             whatsapp_msg += f"*Parça:* {result.parça_adı}\n"
             whatsapp_msg += f"*Arıza:* {result.arıza_analizi[0] if result.arıza_analizi else '-'}\n"
@@ -509,9 +399,9 @@ if final_file:
             wa_link = f"https://wa.me/?text={urllib.parse.quote(whatsapp_msg)}"
             st.markdown(f'<a href="{wa_link}" target="_blank" class="share-btn">📱 WHATSAPP İLE PAYLAŞ</a>', unsafe_allow_html=True)
 
-            # Google Search
             query = urllib.parse.quote(L["purchase_query"].format(result.parça_adı))
-            st.markdown(f'<a href="https://www.google.com/search?q={query}" target="_blank" style="text-decoration:none;"><div style="width:100%; background:linear-gradient(90deg, #3D5AFE 0%, #1A237E 100%); color:white; text-align:center; border-radius:12px; padding:18px; font-weight:bold; margin-top:10px; box-shadow: 0 4px 15px rgba(61, 90, 254, 0.3);"> {L["purchase_button"]} </div></a>', unsafe_allow_html=True)
+            st.markdown(f'<a href="https://www.google.com/search?q={query}" target="_blank" style="text-decoration:none;"><div style="width:100%; background:linear-gradient(135deg, var(--accent-cyan), var(--accent-blue)); color:var(--bg-base); text-align:center; border-radius:10px; padding:16px; font-family:Rajdhani,sans-serif; font-weight:700; font-size:15px; letter-spacing:2px; margin-top:10px; box-shadow: 0 4px 24px rgba(0,212,232,0.25);"> {L["purchase_button"]} </div></a>', unsafe_allow_html=True)
+
         except Exception as e:
             st.error(L["error_label"].format(str(e)))
             st.markdown("""
