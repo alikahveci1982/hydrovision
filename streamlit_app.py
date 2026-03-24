@@ -67,12 +67,228 @@ LANGUAGES = {
 }
 
 # ─── SAYFA AYARLARI ───────────────────────────────────────────────────────────
-st.set_page_config(page_title="HydroVision Pro", page_icon="⚙️", layout="wide", initial_sidebar_state="collapsed")
 
-# Modern Industrial Theme CSS (Fast Ops Optimized)
-st.markdown("""
+  st.markdown("""
 <style>
-    /* Global Background & Text */
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap');
+
+:root {
+    --bg-base: #050e1a;
+    --bg-panel: #091624;
+    --bg-card: #0d1f33;
+    --bg-elevated: #112540;
+    --accent-cyan: #00d4e8;
+    --accent-blue: #0088cc;
+    --accent-orange: #ff6b1a;
+    --accent-green: #00e5a0;
+    --text-primary: #e8f4ff;
+    --text-secondary: #7aa8cc;
+    --text-muted: #3d6080;
+    --border: rgba(0,212,232,0.15);
+    --glow-cyan: 0 0 20px rgba(0,212,232,0.3);
+}
+
+/* ── GENEL ZEMIN ── */
+html, body, .stApp, [data-testid="stAppViewContainer"] {
+    background-color: var(--bg-base) !important;
+    background-image:
+        linear-gradient(rgba(0,212,232,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,232,0.03) 1px, transparent 1px) !important;
+    background-size: 40px 40px !important;
+    font-family: 'Exo 2', sans-serif !important;
+}
+
+[data-testid="stHeader"] { background: rgba(5,14,26,0.9) !important; border-bottom: 1px solid var(--border); }
+
+.main .block-container {
+    background: transparent !important;
+    padding-top: 2rem;
+    max-width: 1100px;
+}
+
+/* ── SIDEBAR ── */
+section[data-testid="stSidebar"] {
+    background-color: var(--bg-panel) !important;
+    border-right: 1px solid var(--border) !important;
+}
+section[data-testid="stSidebar"]::after {
+    content: '';
+    position: absolute;
+    top: 0; right: -1px;
+    width: 1px; height: 100%;
+    background: linear-gradient(180deg, transparent, var(--accent-cyan), transparent);
+    opacity: 0.5;
+}
+
+/* ── BAŞLIKLAR ── */
+h1, h2, h3 {
+    color: var(--text-primary) !important;
+    font-family: 'Rajdhani', sans-serif !important;
+    letter-spacing: 3px !important;
+    text-align: center;
+}
+h1 {
+    font-size: 2rem !important;
+    background: linear-gradient(90deg, var(--accent-cyan), var(--text-primary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+p, span, label, div, .stMarkdown {
+    color: var(--text-secondary) !important;
+    font-family: 'Exo 2', sans-serif !important;
+}
+
+/* ── INPUT / SELECTBOX ── */
+[data-testid="stTextInput"] input,
+[data-testid="stSelectbox"] > div > div {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 8px !important;
+    color: var(--text-primary) !important;
+    font-family: 'Share Tech Mono', monospace !important;
+    font-size: 13px !important;
+    transition: border-color 0.2s, box-shadow 0.2s !important;
+}
+[data-testid="stTextInput"] input:focus {
+    border-color: var(--accent-cyan) !important;
+    box-shadow: var(--glow-cyan) !important;
+}
+
+/* ── ANA ANALİZ BUTONU ── */
+div.stButton > button[kind="primary"],
+div.stButton > button {
+    width: 100%;
+    min-height: 56px !important;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue)) !important;
+    color: var(--bg-base) !important;
+    font-family: 'Rajdhani', sans-serif !important;
+    font-weight: 700 !important;
+    font-size: 16px !important;
+    letter-spacing: 3px !important;
+    text-transform: uppercase !important;
+    border: none !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 24px rgba(0,212,232,0.25) !important;
+    transition: all 0.25s !important;
+    margin-bottom: 8px;
+}
+div.stButton > button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 32px rgba(0,212,232,0.4) !important;
+}
+
+/* ── KAMERA BUTONU ── */
+[data-testid="stCameraInput"] button {
+    background: linear-gradient(135deg, var(--accent-orange), #cc3d00) !important;
+    color: white !important;
+    font-family: 'Rajdhani', sans-serif !important;
+    font-weight: 700 !important;
+    border-radius: 8px !important;
+    border: none !important;
+}
+
+/* ── UPLOAD ALANI ── */
+[data-testid="stFileUploader"] {
+    background: var(--bg-card) !important;
+    border: 2px dashed var(--border) !important;
+    border-radius: 14px !important;
+    padding: 12px !important;
+    transition: border-color 0.2s !important;
+}
+[data-testid="stFileUploader"]:hover {
+    border-color: var(--accent-cyan) !important;
+    box-shadow: var(--glow-cyan) !important;
+}
+
+/* ── KAMERA ALANI ── */
+[data-testid="stCameraInput"] {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 14px !important;
+    overflow: hidden !important;
+}
+
+/* ── KARTLAR ── */
+.info-card {
+    background: var(--bg-card);
+    padding: 20px 24px;
+    border-radius: 14px;
+    margin-bottom: 16px;
+    border-left: 4px solid var(--accent-cyan);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+.fault-card {
+    background: rgba(255,107,26,0.08);
+    padding: 20px 24px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,107,26,0.25);
+    border-left: 4px solid var(--accent-orange);
+    margin-bottom: 12px;
+}
+.solution-card {
+    background: rgba(0,229,160,0.07);
+    padding: 20px 24px;
+    border-radius: 14px;
+    border: 1px solid rgba(0,229,160,0.2);
+    border-left: 4px solid var(--accent-green);
+    margin-bottom: 12px;
+}
+
+/* ── STATUS / SPINNER ── */
+[data-testid="stStatusWidget"] {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 10px !important;
+}
+
+/* ── INFO / WARNING BOXES ── */
+[data-testid="stAlert"] {
+    background: var(--bg-elevated) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 10px !important;
+    color: var(--text-secondary) !important;
+}
+
+/* ── DOWNLOAD BUTONU ── */
+[data-testid="stDownloadButton"] button {
+    background: var(--bg-elevated) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--accent-cyan) !important;
+    font-family: 'Share Tech Mono', monospace !important;
+    letter-spacing: 1px !important;
+    border-radius: 8px !important;
+}
+[data-testid="stDownloadButton"] button:hover {
+    border-color: var(--accent-cyan) !important;
+    box-shadow: var(--glow-cyan) !important;
+}
+
+/* ── WHATSAPP & GOOGLE BUTONLARI ── */
+.share-btn {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    background: #25D366 !important;
+    color: white !important;
+    text-align: center;
+    border-radius: 10px;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 2px;
+    text-decoration: none;
+    margin-top: 10px;
+    transition: all 0.2s;
+    box-shadow: 0 4px 16px rgba(37,211,102,0.25);
+}
+.share-btn:hover { box-shadow: 0 8px 24px rgba(37,211,102,0.4); transform: translateY(-2px); }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-base); }
+::-webkit-scrollbar-thumb { background: var(--accent-blue); border-radius: 3px; }
+</style>
+""", unsafe_allow_html=True)  /* Global Background & Text */
     .main { 
         background-color: #0B0E14; 
         color: #E0E0E0 !important; 
