@@ -262,63 +262,44 @@ div.stButton > button:hover {
     box-shadow: 0 4px 16px rgba(37,211,102,0.25);
 }
 
-/* ── SIDEBAR COLLAPSE BUTTON İKON DÜZELTMESİ ── */
-/* "double_arrow_right" yazısını tamamen gizle */
-[data-testid="stSidebarCollapsedControl"] span {
-    font-size: 0 !important;
-    color: transparent !important;
+/* ── SIDEBAR COLLAPSE BUTTON KESİN ÇÖZÜM ── */
+/* Butonun içindeki tüm metinleri ve ikonları (double_arrow dahil) öldür */
+[data-testid="stSidebarCollapsedControl"] button div,
+[data-testid="stSidebarCollapsedControl"] button p,
+[data-testid="stSidebarCollapsedControl"] button span,
+[data-testid="stSidebarCollapsedControl"] svg {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
 }
 
-/* Kendi ikonumuzu (☰) butonun içine yerleştir */
-[data-testid="stSidebarCollapsedControl"]::after {
-    content: '☰';
-    position: absolute;
-    color: var(--accent-cyan);
-    font-size: 20px;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-/* Butonun genel kutu yapısını düzenle (Tasarımı bozmadan) */
-[data-testid="stSidebarCollapsedControl"] {
+/* Butonun kendisini şık bir kutu haline getir */
+[data-testid="stSidebarCollapsedControl"] button {
     background: var(--bg-elevated) !important;
     border: 1px solid var(--border) !important;
     border-radius: 0 8px 8px 0 !important;
-    width: 40px !important;
-    height: 40px !important;
-}
-
-/* Menü açıkken üstte duran kapatma butonunu şıklaştır */
-[data-testid="stSidebarCollapseButton"] button {
-    background: transparent !important;
-    border: 1px solid var(--border) !important;
-    color: var(--accent-cyan) !important;
-    border-radius: 8px !important;
-}
-[data-testid="stSidebarCollapseButton"] button {
-    background: var(--bg-elevated) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: 8px !important;
-    color: var(--accent-cyan) !important;
-    width: 36px !important;
-    height: 36px !important;
+    width: 42px !important;
+    height: 42px !important;
+    position: relative !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
 }
-[data-testid="stSidebarCollapseButton"] button::after {
+
+/* Kendi "☰" ikonumuzu en üste çak */
+[data-testid="stSidebarCollapsedControl"] button::before {
     content: '☰' !important;
-    font-size: 18px !important;
     color: var(--accent-cyan) !important;
+    font-size: 22px !important;
+    position: absolute !important;
+    display: block !important;
     visibility: visible !important;
 }
 
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--bg-base); }
-::-webkit-scrollbar-thumb { background: var(--accent-blue); border-radius: 3px; }
-</style>
-""", unsafe_allow_html=True)
+/* Menü açıkken üstteki kapatma butonunu da benzer dile çek */
+[data-testid="stSidebarCollapseButton"] button svg {
+    fill: var(--accent-cyan) !important;
+}
 
 # ─── SIDEBAR & LOGIC ──────────────────────────────────────────────────────────
 if "lang" not in st.session_state:
