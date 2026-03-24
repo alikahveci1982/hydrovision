@@ -17,7 +17,7 @@ LANGUAGES = {
         "pdf_button": "📥 PDF RAPORU İNDİR",
         "fault_title": "⚠️ Tespit Edilen Kritik Hatalar",
         "solution_title": "✅ Önerilen Aksiyon Planı",
-        "system_prompt": "Sen kıdemli bir hidrolik mühendisisin. JSON formatında teknik cevap ver.",
+        "system_prompt": "Sen kıdemli bir hidrolik mühendisisin. Yanıtlarını JSON formatında ver.",
         "user_prompt": "Görseli ISO 1219 standartlarına göre analiz et."
     },
     "EN": {
@@ -63,7 +63,8 @@ if "api_key" not in st.session_state:
     st.session_state.api_key = st.secrets.get("GEMINI_API_KEY", "")
 
 if st.session_state.api_key:
-    genai.configure(api_key=st.session_state.api_key)
+    # Anahtarın etrafındaki olası boşlukları temizleyerek yapılandır
+    genai.configure(api_key=st.session_state.api_key.strip())
 
 # ─── PDF OLUŞTURUCU ───────────────────────────────────────────────────────────
 def create_pdf(res, lang_code):
@@ -87,44 +88,25 @@ def create_pdf(res, lang_code):
     pdf.set_text_color(0, 0, 0)
     pdf.set_font("Arial", size=10)
     pdf.multi_cell(0, 10, txt=res.cozum)
-    return pdf.output(dest='S').encode('latin-1')
+    # latin-1 kullanarak basit karakterleri destekle (Türkçe karakterler için ilerde font yüklenebilir)
+    return pdf.output(dest='S').encode('latin-1', 'replace')
 
-# ─── GÖRSEL CSS (TASARIMI GERİ GETİRİYORUZ) ───────────────────────────────────
+# ─── GÖRSEL CSS ──────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Exo+2:wght@400;600&display=swap');
-
-:root {
-    --bg-base: #050e1a;
-    --accent-cyan: #00d4e8;
-    --border: rgba(0,212,232,0.15);
-    --glow: 0 0 15px rgba(0,212,232,0.2);
-}
-
+:root { --bg-base: #050e1a; --accent-cyan: #00d4e8; --glow: 0 0 15px rgba(0,212,232,0.2); }
 html, body, .stApp {
     background-color: var(--bg-base) !important;
     background-image: linear-gradient(rgba(0,212,232,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(0,212,232,0.02) 1px, transparent 1px) !important;
     background-size: 30px 30px !important;
     font-family: 'Exo 2', sans-serif !important;
 }
-
 h1 { font-family: 'Rajdhani', sans-serif !important; color: var(--accent-cyan) !important; text-align: center; letter-spacing: 3px; }
-
 .info-card { background: #0d1f33; padding: 20px; border-radius: 12px; border-left: 5px solid var(--accent-cyan); margin-bottom: 15px; box-shadow: var(--glow); }
 .fault-card { background: rgba(255,107,26,0.05); padding: 20px; border-radius: 12px; border-left: 5px solid #ff6b1a; border: 1px solid rgba(255,107,26,0.2); margin-bottom: 12px; }
 .sol-card { background: rgba(0,229,160,0.05); padding: 20px; border-radius: 12px; border-left: 5px solid #00e5a0; border: 1px solid rgba(0,229,160,0.2); margin-bottom: 12px; }
-
-div.stButton > button {
-    width: 100%;
-    background: linear-gradient(135deg, var(--accent-cyan), #0088cc) !important;
-    color: #050e1a !important;
-    font-weight: 700 !important;
-    border: none !important;
-    padding: 15px !important;
-    border-radius: 8px !important;
-}
-
-/* Sidebar Buton Fix */
+div.stButton > button { width: 100%; background: linear-gradient(135deg, var(--accent-cyan), #0088cc) !important; color: #050e1a !important; font-weight: 700 !important; border-radius: 8px !important; border: none !important; padding: 15px !important; }
 [data-testid="stSidebarCollapsedControl"] { background: #112540 !important; border-radius: 0 8px 8px 0 !important; color: var(--accent-cyan) !important; }
 [data-testid="stSidebarCollapsedControl"]::after { content: '☰'; font-size: 20px; position: absolute; left: 12px; }
 [data-testid="stSidebarCollapsedControl"] span { display: none; }
@@ -138,7 +120,7 @@ with st.sidebar:
     L = LANGUAGES[lang_key]
     user_api = st.text_input("Override API Key", type="password")
     if user_api: 
-        genai.configure(api_key=user_api)
+        genai.configure(api_key=user_api.strip())
         st.session_state.api_key = user_api
 
 st.markdown(f"<h1>{L['title']}</h1>", unsafe_allow_html=True)
@@ -159,26 +141,46 @@ cam = st.camera_input("Camera")
 file = st.file_uploader("Gallery", type=["jpg", "png"])
 final = cam or file
 
+# ─── ANALİZ FONKSİYONU (FALLBACK DESTEKLİ) ───────────────────────────────────
+def analyze_with_fallback(image, lang_data):
+    # Sırayla denenecek modeller
+    models_to_try = ["models/gemini-1.5-flash", "models/gemini-1.5-pro", "gemini-1.5-flash"]
+    last_error = None
+
+    for m_name in models_to_try:
+        try:
+            model = genai.GenerativeModel(m_name, system_instruction=lang_data["system_prompt"])
+            prompt = f"{lang_data['user_prompt']} Return JSON format: {{'parca':'','hata':'','cozum':''}}"
+            resp = model.generate_content([prompt, image], generation_config={"response_mime_type": "application/json"})
+            return AnalysisRes.model_validate_json(resp.text)
+        except Exception as e:
+            last_error = e
+            continue
+    raise last_error
+
 if final:
     img = Image.open(final)
     st.image(img, use_container_width=True)
     
     if st.button(L["analyze_button"]):
         with st.status("⚙️ Analyzing...") as s:
-            model = genai.GenerativeModel("gemini-1.5-flash", system_instruction=L["system_prompt"])
-            prompt = f"{L['user_prompt']} Return JSON: {{'parca':'','hata':'','cozum':''}}"
-            resp = model.generate_content([prompt, img], generation_config={"response_mime_type": "application/json"})
-            res = AnalysisRes.model_validate_json(resp.text)
-            s.update(label="✅ Complete!", state="complete")
+            try:
+                res = analyze_with_fallback(img, L)
+                s.update(label="✅ Complete!", state="complete")
 
-        st.markdown(f'<div class="info-card"><h3>📍 {res.parca}</h3></div>', unsafe_allow_html=True)
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown(f'<div class="fault-card"><h4>{L["fault_title"]}</h4><p>{res.hata}</p></div>', unsafe_allow_html=True)
-        with col2:
-            st.markdown(f'<div class="sol-card"><h4>{L["solution_title"]}</h4><p>{res.cozum}</p></div>', unsafe_allow_html=True)
-        
-        # PDF İNDİRME
-        pdf_data = create_pdf(res, lang_key)
-        st.download_button(L["pdf_button"], data=pdf_data, file_name=f"Report_{res.parca}.pdf", mime="application/pdf")
+                st.markdown(f'<div class="info-card"><h3>📍 {res.parca}</h3></div>', unsafe_allow_html=True)
+                
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.markdown(f'<div class="fault-card"><h4>{L["fault_title"]}</h4><p>{res.hata}</p></div>', unsafe_allow_html=True)
+                with col2:
+                    st.markdown(f'<div class="sol-card"><h4>{L["solution_title"]}</h4><p>{res.cozum}</p></div>', unsafe_allow_html=True)
+                
+                # PDF İNDİRME
+                pdf_data = create_pdf(res, lang_key)
+                st.download_button(L["pdf_button"], data=pdf_data, file_name=f"Report_{res.parca}.pdf", mime="application/pdf")
+            
+            except Exception as e:
+                s.update(label="❌ Error!", state="error")
+                st.error(f"Bağlantı Hatası: {str(e)}")
+                st.info("İpucu: API anahtarınızın aktif olduğundan ve Secrets kısmında doğru tanımlandığından emin olun.")
