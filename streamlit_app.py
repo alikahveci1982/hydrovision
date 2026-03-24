@@ -263,24 +263,38 @@ div.stButton > button:hover {
 }
 
 /* ── SIDEBAR COLLAPSE BUTTON İKON DÜZELTMESİ ── */
-[data-testid="collapsedControl"],
-button[kind="header"],
-[data-testid="stSidebarCollapsedControl"] {
-    font-family: 'Material Icons' !important;
-    font-size: 0 !important;
-}
-[data-testid="collapsedControl"] span,
+/* "double_arrow_right" yazısını tamamen gizle */
 [data-testid="stSidebarCollapsedControl"] span {
-    font-family: 'Material Icons' !important;
-    font-size: 24px !important;
-    font-style: normal !important;
-    letter-spacing: normal !important;
-}
-/* Yazı olarak çıkan ikon metnini gizle, ok karakteri göster */
-button[data-testid="collapsedControl"] p,
-[data-testid="stSidebarCollapseButton"] span {
     font-size: 0 !important;
-    visibility: hidden !important;
+    color: transparent !important;
+}
+
+/* Kendi ikonumuzu (☰) butonun içine yerleştir */
+[data-testid="stSidebarCollapsedControl"]::after {
+    content: '☰';
+    position: absolute;
+    color: var(--accent-cyan);
+    font-size: 20px;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* Butonun genel kutu yapısını düzenle (Tasarımı bozmadan) */
+[data-testid="stSidebarCollapsedControl"] {
+    background: var(--bg-elevated) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 0 8px 8px 0 !important;
+    width: 40px !important;
+    height: 40px !important;
+}
+
+/* Menü açıkken üstte duran kapatma butonunu şıklaştır */
+[data-testid="stSidebarCollapseButton"] button {
+    background: transparent !important;
+    border: 1px solid var(--border) !important;
+    color: var(--accent-cyan) !important;
+    border-radius: 8px !important;
 }
 [data-testid="stSidebarCollapseButton"] button {
     background: var(--bg-elevated) !important;
