@@ -103,110 +103,95 @@ html, body, .stApp, [data-testid="stAppViewContainer"] {
     border-bottom: 1px solid var(--border);
 }
 
-.main .block-container {
-    background: transparent !important;
-    padding-top: 2rem;
-    max-width: 1100px;
-}
-
 section[data-testid="stSidebar"] {
     background-color: var(--bg-panel) !important;
     border-right: 1px solid var(--border) !important;
 }
 
-h1, h2, h3 {
-    color: var(--text-primary) !important;
+h1 {
     font-family: 'Rajdhani', sans-serif !important;
     letter-spacing: 3px !important;
     text-align: center;
-}
-h1 {
     font-size: 2rem !important;
     background: linear-gradient(90deg, var(--accent-cyan), var(--text-primary));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
-p, span, label, div, .stMarkdown {
-    color: var(--text-secondary) !important;
-    font-family: 'Exo 2', sans-serif !important;
-}
 
-/* ── SIDEBAR COLLAPSE BUTTON NİHAİ ÇÖZÜM ── */
-/* Butonun içindeki metni (double_arrow_right) bul ve her koşulda yok et */
-[data-testid="stSidebarCollapsedControl"] button * {
-    font-size: 0 !important;
-    color: transparent !important;
-    line-height: 0 !important;
-    display: none !important; /* Tüm alt öğeleri gizle */
-}
-
-/* Butonun kendisini yeniden boyutlandır ve temizle */
-[data-testid="stSidebarCollapsedControl"] button {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    background: var(--bg-elevated) !important;
+/* ── SIDEBAR FIXES (MENÜ BUTONU DÜZELTMESİ) ── */
+/* Menü kapalıyken solda duran butonu düzenle */
+[data-testid="stSidebarCollapsedControl"] {
+    background-color: var(--bg-elevated) !important;
     border: 1px solid var(--border) !important;
     border-radius: 0 8px 8px 0 !important;
-    width: 44px !important;
-    height: 44px !important;
-    position: relative !important;
-}
-
-/* Kendi ikonumuzu (☰) pseudo-element olarak en üste ekle */
-[data-testid="stSidebarCollapsedControl"] button::before {
-    content: '☰' !important;
-    display: block !important;
-    font-size: 24px !important;
     color: var(--accent-cyan) !important;
-    visibility: visible !important;
-    position: absolute !important;
+    width: 45px !important;
+    height: 45px !important;
+    box-shadow: var(--glow-cyan) !important;
 }
 
-/* Menü açıkken üstteki X kapatma ikonunun rengini koru */
-[data-testid="stSidebarCollapseButton"] button svg {
-    fill: var(--accent-cyan) !important;
+/* Yazı olarak çıkan "double_arrow_right" metnini tamamen gizle */
+[data-testid="stSidebarCollapsedControl"] span {
+    color: transparent !important;
+    font-size: 0 !important;
 }
 
-[data-testid="stTextInput"] input,
-[data-testid="stSelectbox"] > div > div {
-    background: var(--bg-card) !important;
+/* Kendi ikonumuzu (☰) yerleştir */
+[data-testid="stSidebarCollapsedControl"]::after {
+    content: '☰';
+    position: absolute;
+    color: var(--accent-cyan);
+    font-size: 22px;
+    left: 12px;
+}
+
+/* Menü açıkken üstteki kapatma butonunu düzenle */
+[data-testid="stSidebarCollapseButton"] button {
+    background: transparent !important;
     border: 1px solid var(--border) !important;
-    border-radius: 8px !important;
+    color: var(--accent-cyan) !important;
+}
+
+/* Geri kalan standart UI elemanları */
+[data-testid="stTextInput"] input {
+    background: var(--bg-card) !important;
     color: var(--text-primary) !important;
-    font-family: 'Share Tech Mono', monospace !important;
+    border: 1px solid var(--border) !important;
 }
 
 div.stButton > button {
     width: 100%;
-    min-height: 56px !important;
     background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue)) !important;
     color: var(--bg-base) !important;
     font-family: 'Rajdhani', sans-serif !important;
     font-weight: 700 !important;
-    border: none !important;
     border-radius: 10px !important;
     box-shadow: 0 4px 24px rgba(0,212,232,0.25) !important;
+    transition: all 0.25s !important;
 }
 
 .info-card {
     background: var(--bg-card);
-    padding: 20px 24px;
+    padding: 20px;
     border-radius: 14px;
-    margin-bottom: 16px;
     border-left: 4px solid var(--accent-cyan);
+    margin-bottom: 16px;
 }
+
 .fault-card {
     background: rgba(255,107,26,0.08);
-    padding: 20px 24px;
+    padding: 20px;
     border-radius: 14px;
     border-left: 4px solid var(--accent-orange);
+    margin-bottom: 12px;
 }
+
 .solution-card {
     background: rgba(0,229,160,0.07);
-    padding: 20px 24px;
+    padding: 20px;
     border-radius: 14px;
     border-left: 4px solid var(--accent-green);
+    margin-bottom: 12px;
 }
 
 ::-webkit-scrollbar { width: 6px; }
@@ -344,10 +329,10 @@ if final_file:
             whatsapp_msg += f"*Arıza:* {result.arıza_analizi[0] if result.arıza_analizi else '-'}\n"
             whatsapp_msg += f"*Çözüm:* {result.çözüm_önerisi[0] if result.çözüm_önerisi else '-'}"
             wa_link = f"https://wa.me/?text={urllib.parse.quote(whatsapp_msg)}"
-            st.markdown(f'<a href="{wa_link}" target="_blank" class="share-btn">📱 WHATSAPP İLE PAYLAŞ</a>', unsafe_allow_html=True)
+            st.markdown(f'<a href="{wa_link}" target="_blank" class="share-btn" style="display:block; width:100%; padding:16px; background:#25D366; color:white; text-align:center; border-radius:10px; text-decoration:none; font-weight:700;">📱 WHATSAPP İLE PAYLAŞ</a>', unsafe_allow_html=True)
 
             query = urllib.parse.quote(L["purchase_query"].format(result.parça_adı))
-            st.markdown(f'<a href="https://www.google.com/search?q={query}" target="_blank" style="text-decoration:none;"><div style="width:100%; background:linear-gradient(135deg, var(--accent-cyan), var(--accent-blue)); color:var(--bg-base); text-align:center; border-radius:10px; padding:16px; font-family:Rajdhani,sans-serif; font-weight:700; font-size:15px; letter-spacing:2px; margin-top:10px; box-shadow: 0 4px 24px rgba(0,212,232,0.25);"> {L["purchase_button"]} </div></a>', unsafe_allow_html=True)
+            st.markdown(f'<a href="https://www.google.com/search?q={query}" target="_blank" style="text-decoration:none;"><div style="width:100%; background:linear-gradient(135deg, var(--accent-cyan), var(--accent-blue)); color:var(--bg-base); text-align:center; border-radius:10px; padding:16px; font-weight:700; margin-top:10px;"> {L["purchase_button"]} </div></a>', unsafe_allow_html=True)
 
         except Exception as e:
             st.error(L["error_label"].format(str(e)))
