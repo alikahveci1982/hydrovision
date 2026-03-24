@@ -72,7 +72,6 @@ st.set_page_config(page_title="HydroVision Pro", page_icon="⚙️", layout="wid
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap');
-@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 
 :root {
     --bg-base: #050e1a;
@@ -132,6 +131,42 @@ p, span, label, div, .stMarkdown {
     font-family: 'Exo 2', sans-serif !important;
 }
 
+/* ── SIDEBAR COLLAPSE BUTTON KESİN ÇÖZÜM ── */
+/* Butonun içindeki "double_arrow_right" yazısını her türlü katmanda öldür */
+[data-testid="stSidebarCollapsedControl"] button p,
+[data-testid="stSidebarCollapsedControl"] button span,
+[data-testid="stSidebarCollapsedControl"] button div {
+    display: none !important;
+    color: transparent !important;
+    font-size: 0 !important;
+}
+
+/* Butonu temiz bir kutu haline getir ve ikon yerleştir */
+[data-testid="stSidebarCollapsedControl"] button {
+    background: var(--bg-elevated) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 0 8px 8px 0 !important;
+    width: 44px !important;
+    height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+}
+
+[data-testid="stSidebarCollapsedControl"] button::before {
+    content: '☰' !important;
+    color: var(--accent-cyan) !important;
+    font-size: 24px !important;
+    position: absolute !important;
+    visibility: visible !important;
+}
+
+/* Menü açıkken üstteki kapatma butonunu düzenle */
+[data-testid="stSidebarCollapseButton"] button svg {
+    fill: var(--accent-cyan) !important;
+}
+
 [data-testid="stTextInput"] input,
 [data-testid="stSelectbox"] > div > div {
     background: var(--bg-card) !important;
@@ -139,11 +174,6 @@ p, span, label, div, .stMarkdown {
     border-radius: 8px !important;
     color: var(--text-primary) !important;
     font-family: 'Share Tech Mono', monospace !important;
-    font-size: 13px !important;
-}
-[data-testid="stTextInput"] input:focus {
-    border-color: var(--accent-cyan) !important;
-    box-shadow: var(--glow-cyan) !important;
 }
 
 div.stButton > button {
@@ -153,45 +183,9 @@ div.stButton > button {
     color: var(--bg-base) !important;
     font-family: 'Rajdhani', sans-serif !important;
     font-weight: 700 !important;
-    font-size: 16px !important;
-    letter-spacing: 3px !important;
-    text-transform: uppercase !important;
     border: none !important;
     border-radius: 10px !important;
     box-shadow: 0 4px 24px rgba(0,212,232,0.25) !important;
-    transition: all 0.25s !important;
-    margin-bottom: 8px;
-}
-div.stButton > button:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 32px rgba(0,212,232,0.4) !important;
-}
-
-[data-testid="stCameraInput"] button {
-    background: linear-gradient(135deg, var(--accent-orange), #cc3d00) !important;
-    color: white !important;
-    font-family: 'Rajdhani', sans-serif !important;
-    font-weight: 700 !important;
-    border-radius: 8px !important;
-    border: none !important;
-}
-
-[data-testid="stFileUploader"] {
-    background: var(--bg-card) !important;
-    border: 2px dashed var(--border) !important;
-    border-radius: 14px !important;
-    padding: 12px !important;
-}
-[data-testid="stFileUploader"]:hover {
-    border-color: var(--accent-cyan) !important;
-    box-shadow: var(--glow-cyan) !important;
-}
-
-[data-testid="stCameraInput"] {
-    background: var(--bg-card) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: 14px !important;
-    overflow: hidden !important;
 }
 
 .info-card {
@@ -200,106 +194,24 @@ div.stButton > button:hover {
     border-radius: 14px;
     margin-bottom: 16px;
     border-left: 4px solid var(--accent-cyan);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
 }
 .fault-card {
     background: rgba(255,107,26,0.08);
     padding: 20px 24px;
     border-radius: 14px;
-    border: 1px solid rgba(255,107,26,0.25);
     border-left: 4px solid var(--accent-orange);
-    margin-bottom: 12px;
 }
 .solution-card {
     background: rgba(0,229,160,0.07);
     padding: 20px 24px;
     border-radius: 14px;
-    border: 1px solid rgba(0,229,160,0.2);
     border-left: 4px solid var(--accent-green);
-    margin-bottom: 12px;
 }
 
-[data-testid="stStatusWidget"] {
-    background: var(--bg-card) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: 10px !important;
-}
-
-[data-testid="stAlert"] {
-    background: var(--bg-elevated) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: 10px !important;
-    color: var(--text-secondary) !important;
-}
-
-[data-testid="stDownloadButton"] button {
-    background: var(--bg-elevated) !important;
-    border: 1px solid var(--border) !important;
-    color: var(--accent-cyan) !important;
-    font-family: 'Share Tech Mono', monospace !important;
-    letter-spacing: 1px !important;
-    border-radius: 8px !important;
-}
-[data-testid="stDownloadButton"] button:hover {
-    border-color: var(--accent-cyan) !important;
-    box-shadow: var(--glow-cyan) !important;
-}
-
-.share-btn {
-    display: block;
-    width: 100%;
-    padding: 16px;
-    background: #25D366 !important;
-    color: white !important;
-    text-align: center;
-    border-radius: 10px;
-    font-family: 'Rajdhani', sans-serif;
-    font-weight: 700;
-    font-size: 15px;
-    letter-spacing: 2px;
-    text-decoration: none;
-    margin-top: 10px;
-    box-shadow: 0 4px 16px rgba(37,211,102,0.25);
-}
-
-/* ── SIDEBAR COLLAPSE BUTTON KESİN ÇÖZÜM ── */
-/* Butonun içindeki tüm metinleri ve ikonları (double_arrow dahil) öldür */
-[data-testid="stSidebarCollapsedControl"] button div,
-[data-testid="stSidebarCollapsedControl"] button p,
-[data-testid="stSidebarCollapsedControl"] button span,
-[data-testid="stSidebarCollapsedControl"] svg {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-}
-
-/* Butonun kendisini şık bir kutu haline getir */
-[data-testid="stSidebarCollapsedControl"] button {
-    background: var(--bg-elevated) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: 0 8px 8px 0 !important;
-    width: 42px !important;
-    height: 42px !important;
-    position: relative !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-}
-
-/* Kendi "☰" ikonumuzu en üste çak */
-[data-testid="stSidebarCollapsedControl"] button::before {
-    content: '☰' !important;
-    color: var(--accent-cyan) !important;
-    font-size: 22px !important;
-    position: absolute !important;
-    display: block !important;
-    visibility: visible !important;
-}
-
-/* Menü açıkken üstteki kapatma butonunu da benzer dile çek */
-[data-testid="stSidebarCollapseButton"] button svg {
-    fill: var(--accent-cyan) !important;
-}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-thumb { background: var(--accent-blue); border-radius: 3px; }
+</style>
+""", unsafe_allow_html=True)
 
 # ─── SIDEBAR & LOGIC ──────────────────────────────────────────────────────────
 if "lang" not in st.session_state:
@@ -438,16 +350,5 @@ if final_file:
 
         except Exception as e:
             st.error(L["error_label"].format(str(e)))
-            st.markdown("""
-            <div class="fault-card">
-                <h4>💡 Teknik İpucu</h4>
-                <p>Analiz kalitesini artırmak için:</p>
-                <ul>
-                    <li>Parçayı daha aydınlık bir ortamda çekin.</li>
-                    <li>Kamerayı parçaya dik açıyla tutun.</li>
-                    <li>Şema ise çizgilerin net çıktığından emin olun.</li>
-                </ul>
-            </div>
-            """, unsafe_allow_html=True)
 else:
     st.info(L["no_image_info"])
