@@ -262,46 +262,42 @@ div.stButton > button:hover {
     box-shadow: 0 4px 20px rgba(37,211,102,0.3);
 }
 
-/* ── SIDEBAR COLLAPSE BUTTON ── */
-[data-testid="collapsedControl"],
-button[kind="header"],
-[data-testid="stSidebarCollapsedControl"] {
-    font-family: 'Material Icons' !important;
-    font-size: 0 !important;
-}
-[data-testid="collapsedControl"] span,
-[data-testid="stSidebarCollapsedControl"] span {
-    font-family: 'Material Icons' !important;
-    font-size: 26px !important;
-    font-style: normal !important;
-    letter-spacing: normal !important;
-}
-button[data-testid="collapsedControl"] p,
-[data-testid="stSidebarCollapseButton"] span {
-    font-size: 0 !important;
-    visibility: hidden !important;
-}
-[data-testid="stSidebarCollapseButton"] button {
+/* ── MENÜ BUTONU DÜZELTME (HAMBURGER ☰) ── */
+[data-testid="stSidebarCollapsedControl"] button,
+[data-testid="collapsedControl"] button {
     background: var(--bg-elevated) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: 10px !important;
+    border: 2px solid var(--border) !important;
+    border-radius: 12px !important;
     color: var(--accent-cyan) !important;
-    width: 40px !important;
-    height: 40px !important;
+    width: 48px !important;
+    height: 48px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-}
-[data-testid="stSidebarCollapseButton"] button::after {
-    content: '☰' !important;
-    font-size: 20px !important;
-    color: var(--accent-cyan) !important;
-    visibility: visible !important;
+    box-shadow: var(--glow-cyan) !important;
+    transition: all 0.2s ease !important;
 }
 
-::-webkit-scrollbar { width: 7px; }
-::-webkit-scrollbar-track { background: var(--bg-base); }
-::-webkit-scrollbar-thumb { background: var(--accent-cyan); border-radius: 4px; }
+[data-testid="stSidebarCollapsedControl"] button:hover,
+[data-testid="collapsedControl"] button:hover {
+    transform: scale(1.1) !important;
+    box-shadow: 0 0 30px rgba(0,224,245,0.6) !important;
+}
+
+[data-testid="stSidebarCollapsedControl"] button::after,
+[data-testid="collapsedControl"] button::after {
+    content: '☰' !important;
+    font-size: 28px !important;
+    font-weight: 900 !important;
+    color: var(--accent-cyan) !important;
+}
+
+/* Eski yazı ve span'leri gizle */
+[data-testid="stSidebarCollapsedControl"] span,
+[data-testid="collapsedControl"] span,
+button[data-testid="collapsedControl"] p {
+    display: none !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
