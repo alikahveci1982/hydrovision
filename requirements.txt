@@ -3,3 +3,5 @@ google-generativeai
 Pillow
 fpdf
 pydantic
+reportlab
+pandas
